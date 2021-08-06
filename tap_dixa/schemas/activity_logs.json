@@ -1,0 +1,167 @@
+{
+  "type": [
+    "null",
+    "object"
+  ],
+  "properties": {
+    "id": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "conversation_id": {
+      "type": [
+        "null",
+        "integer"
+      ]
+    },
+    "activity_timestamp": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "activity_type": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "author": {
+      "type": [
+        "null",
+        "object"
+      ],
+      "properties": {
+        "id": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "name": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "email": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "phone_number": {
+          "type": [
+            "null",
+            "string"
+          ]
+        }
+      }
+    },
+    "attributes": {
+      "type": [
+        "null",
+        "object"
+      ],
+      "properties": {
+        "note": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "avatal_url": {
+          "type": [
+            "null"
+          ]
+        },
+        "claimed_from_label": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "claimed_from_type": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "agent": {
+          "type": [
+            "null",
+            "object"
+          ],
+          "properties": {
+            "id": {
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "name": {
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "email": {
+              "type": [
+                "null"
+              ]
+            },
+            "phone_number": {
+              "type": [
+                "null"
+              ]
+            }
+          }
+        },
+        "agent_id": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "agent_name": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "message_id": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "from_endpoint": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "conversation_subject": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "agent_names": {
+          "type": [
+            "null",
+            "array"
+          ],
+          "items": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

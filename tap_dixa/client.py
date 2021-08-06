@@ -45,7 +45,6 @@ class Client:
     def _make_request(self, url, method, headers=None, params=None, data=None):
 
         with self._session as session:
-            print(f"headers: {self._headers}")
             response = session.request(method, url, headers=headers, params=params, data=data)
 
             if response.status_code != 200:
@@ -61,7 +60,13 @@ class Client:
         url = self._build_url('/v1/conversation_export')
         return self._get(url, headers=self._headers, params=params)
 
-    def get_acitivity_logs(self, params):
+    def get_messages(self, params):
+        self._base_url = DixaURL.exports.value
+        self._set_auth_header()
+        url = self._build_url('/v1/message_export')
+        return self._get(url, headers=self._headers, params=params)
+
+    def get_activity_logs(self, params=None):
         self._base_url = DixaURL.integrations.value
         self._set_auth_header()
         url = self._build_url('/v1/conversations/activitylog')

@@ -160,4 +160,4 @@ log/
 .vscode
 
 # tap config files
-*.json
+*config.json

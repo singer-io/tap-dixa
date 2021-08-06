@@ -1,0 +1,119 @@
+{
+  "type": [
+    "null",
+    "object"
+  ],
+  "properties": {
+    "id": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "csid": {
+      "type": [
+        "null",
+        "integer"
+      ]
+    },
+    "created_at": {
+      "type": [
+        "null",
+        "integer"
+      ]
+    },
+    "initial_channel": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "author_name": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "author_email": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "direction": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "text": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "from_phone_number": {
+      "type": [
+        "null"
+      ]
+    },
+    "to_phone_number": {
+      "type": [
+        "null"
+      ]
+    },
+    "duration": {
+      "type": [
+        "null"
+      ]
+    },
+    "to": {
+      "type": [
+        "null",
+        "array"
+      ],
+      "items": {
+        "type": [
+          "null",
+          "string"
+        ]
+      }
+    },
+    "from": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "is_automated_message": {
+      "type": [
+        "null"
+      ]
+    },
+    "voicemail_url": {
+      "type": [
+        "null"
+      ]
+    },
+    "recording_url": {
+      "type": [
+        "null"
+      ]
+    },
+    "chat_input_question": {
+      "type": [
+        "null"
+      ]
+    },
+    "chat_input_answer": {
+      "type": [
+        "null"
+      ]
+    },
+    "chat_menu_text": {
+      "type": [
+        "null"
+      ]
+    }
+  }
+}
