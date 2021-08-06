@@ -22,6 +22,12 @@
         "integer"
       ]
     },
+    "updated_at_datestring": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
     "initial_channel": {
       "type": [
         "null",

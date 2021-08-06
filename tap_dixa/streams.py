@@ -153,6 +153,31 @@ class Conversations(IncrementalStream):
         yield from response
 
 
+class Messages(IncrementalStream):
+    """
+    Get messages from the Dixa platform.
+    """
+    tap_stream_id = 'messages'
+    key_properties = ['id']
+    replication_key = 'updated_at_datestring'
+    valid_replication_keys = ['updated_at_datestring']
+
+    def get_records(self, start_date, is_parent=False):
+        start_dt = singer.utils.strptime_to_utc(start_date)
+        end_dt = start_dt + datetime.timedelta(days=31)
+        start = datetime_to_unix_ms(start_dt)
+        end = datetime_to_unix_ms(end_dt)
+
+        params = {'created_before': end, 'created_after': start}
+        response = self.client.get_messages(params=params)
+
+        for record in response:
+            record['updated_at_datestring'] = unix_ms_to_date(end)
+
+        yield from response
+
+
 STREAMS = {
     'conversations': Conversations,
+    'messages': Messages,
 }
