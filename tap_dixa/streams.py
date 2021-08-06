@@ -1,13 +1,10 @@
-import csv
-import time
-from typing import Any, Iterator
+import datetime
 
-import requests
 import singer
 from singer import Transformer, metrics
 
 from tap_dixa.client import Client
-
+from tap_dixa.helpers import datetime_to_unix_ms, unix_ms_to_date
 
 LOGGER = singer.get_logger()
 
@@ -28,11 +25,11 @@ class BaseStream:
     def __init__(self, client: Client):
         self.client = client
 
-    def get_records(self, config: dict = None, is_parent: bool = False) -> list:
+    def get_records(self, start_date: str, is_parent: bool = False) -> list:
         """
         Returns a list of records for that stream.
 
-        :param config: The tap config file
+        :param start_date: The start date the stream should use
         :param is_parent: If true, may change the type of data
             that is returned for a child stream to consume
         :return: list of records
@@ -82,11 +79,11 @@ class IncrementalStream(BaseStream):
         :param transformer: A singer Transformer object
         :return: State data in the form of a dictionary
         """
-        start_time = singer.get_bookmark(state, self.tap_stream_id, self.replication_key, config['start_date'])
-        max_record_value = start_time
+        start_date = singer.get_bookmark(state, self.tap_stream_id, self.replication_key, config['start_date'])
+        max_record_value = start_date
 
         with metrics.record_counter(self.tap_stream_id) as counter:
-            for record in self.get_records(config):
+            for record in self.get_records(start_date):
                 transformed_record = transformer.transform(record, stream_schema, stream_metadata)
                 record_replication_value = singer.utils.strptime_to_utc(transformed_record[self.replication_key])
                 if record_replication_value >= singer.utils.strptime_to_utc(max_record_value):
@@ -132,24 +129,30 @@ class FullTableStream(BaseStream):
         return state
 
 
-class SampleStream(FullTableStream):
+class Conversations(IncrementalStream):
     """
-    Gets records for a sample stream.
+    Get conversations from the Dixa platform.
     """
-    tap_stream_id = 'sample_stream'
+    tap_stream_id = 'conversations'
     key_properties = ['id']
+    replication_key = 'updated_at_datestring'
+    valid_replication_keys = ['updated_at_datestring']
 
-    def get_records(self, config=None, is_parent=False):
-        sample_data = [{
-            'string_field': 'some string',
-            'datetime_field': '2021-04-23T17:05:41.762537+00:00',
-            'integer_field': 3,
-            'double_field': 22.78,
-        }]
+    def get_records(self, start_date, is_parent=False):
+        start_dt = singer.utils.strptime_to_utc(start_date)
+        end_dt = start_dt + datetime.timedelta(days=31)
+        start = datetime_to_unix_ms(start_dt)
+        end = datetime_to_unix_ms(end_dt)
 
-        yield from sample_data
+        params = {'created_before': end, 'created_after': start}
+        response = self.client.get_conversations(params=params)
+
+        for record in response:
+            record['updated_at_datestring'] = unix_ms_to_date(record['updated_at'])
+
+        yield from response
 
 
 STREAMS = {
-    'sample_stream': SampleStream,
+    'conversations': Conversations,
 }

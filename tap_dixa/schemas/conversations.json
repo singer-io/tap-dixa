@@ -211,6 +211,12 @@
         "integer"
       ]
     },
+    "updated_at_datestring": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
     "last_message_created_at": {
       "type": [
         "null",
