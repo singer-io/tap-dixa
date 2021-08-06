@@ -7,94 +7,42 @@ class DixaclientError(Exception):
         self.response = response
 
 
-class RakutenClient9001Error(DixaclientError):
+class DixaClient5xxError(DixaclientError):
     pass
 
 
-class RakutenClient9003Error(DixaclientError):
+class DixaClient401Error(DixaclientError):
     pass
 
 
-class RakutenClient9066Error(DixaclientError):
+class DixaClient400Error(DixaclientError):
     pass
 
 
-class RakutenClient9067Error(DixaclientError):
-    pass
-
-
-class RakutenClient9068Error(DixaclientError):
-    pass
-
-
-class RakutenClient9069Error(DixaclientError):
-    pass
-
-
-class RakutenClient9099Error(DixaclientError):
-    pass
-
-
-class RakutenClient1003Error(DixaclientError):
-    pass
-
-
-class RakutenClient1009Error(DixaclientError):
-    pass
-
-
-class RakutenClient1043Error(DixaclientError):
-    pass
-
-
-class RakutenClient1092Error(DixaclientError):
+class DixaClient429Error(DixaclientError):
     pass
 
 
 ERROR_CODE_EXCEPTION_MAPPING = {
-    9001: {
-        'raise_exception': RakutenClient9001Error,
-        'message': 'Field is null or empty.',
+    500: {
+        'raise_exception': DixaClient5xxError,
+        'message': 'Server Error',
     },
-    9003: {
-        'raise_exception': RakutenClient9003Error,
-        'message': 'Field length exceeded.'
+    503: {
+        'raise_exception': DixaClient5xxError,
+        'message': 'Server Error',
     },
-    9066: {
-        'raise_exception': RakutenClient9066Error,
-        'message': 'API credential does not exist.'
+    401: {
+        'raise_exception': DixaClient401Error,
+        'message': 'Invalid or missing credentials'
     },
-    9067: {
-        'raise_exception': RakutenClient9067Error,
-        'message': 'API credential is invalid.'
+    400: {
+        'raise_exception': DixaClient400Error,
+        'message': 'Invalid query parameters'
     },
-    9068: {
-        'raise_exception': RakutenClient9068Error,
-        'message': 'API credential is expired.'
-    },
-    9069: {
-        'raise_exception': RakutenClient9069Error,
-        'message': 'API credential is disabled.'
-    },
-    9099: {
-        'raise_exception': RakutenClient9099Error,
-        'message': 'Field should be a number greater than zero.'
-    },
-    1003: {
-        'raise_exception': RakutenClient1003Error,
-        'message': 'Field length exceeded.'
-    },
-    1009: {
-        'raise_exception': RakutenClient1009Error,
-        'message': 'Stock Keeping Unit not found.'
-    },
-    1043: {
-        'raise_exception': RakutenClient1043Error,
-        'message': 'Field contains restricted characters.'
-    },
-    1092: {
-        'raise_exception': RakutenClient1092Error,
-        'message': 'Field should be the number in the specified range.'
+    429: {
+        'raise_exception': DixaClient429Error,
+        'message': 'API limit has been reached'
     },
 }
 
