@@ -162,4 +162,5 @@ log/
 # tap config files
 *config.json
 *catalog*.json
+*state*.json
 generate_schemas.py
