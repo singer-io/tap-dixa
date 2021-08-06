@@ -1,10 +1,12 @@
 import datetime
+from enum import Enum
 
 import singer
 from singer import Transformer, metrics
 
 from tap_dixa.client import Client
-from tap_dixa.helpers import create_csid_params, datetime_to_unix_ms, unix_ms_to_date
+from tap_dixa.helpers import (create_csid_params, datetime_to_unix_ms,
+                              unix_ms_to_date)
 
 LOGGER = singer.get_logger()
 
@@ -55,6 +57,17 @@ class BaseStream:
         return parent.get_records(start_date, is_parent=True)
 
 
+class Interval(Enum):
+    HOUR = 1
+    DAY = 24
+    WEEK = 24 * 7
+    MONTH = 24 * 31
+
+
+class InvalidInterval(Exception):
+    pass
+
+
 class IncrementalStream(BaseStream):
     """
     A child class of a base stream used to represent streams that use the
@@ -64,9 +77,36 @@ class IncrementalStream(BaseStream):
     """
     replication_method = 'INCREMENTAL'
     batched = False
+    interval = None
 
     def __init__(self, client):
         super().__init__(client)
+
+    def set_interval(self, value):
+        self.interval = value.upper()
+
+    def get_interval(self):
+        """
+        Retrieves interval enum. Defaults to MONTH if no interval provided.
+        :return: An enum for the interval to be used with the API
+        """
+        if self.interval:
+            if hasattr(Interval, self.interval):
+                return getattr(Interval, self.interval).value
+
+            # If interval not part of enum, log message and throw error
+            valid_intervals = set()
+            for interval in dir(Interval):
+                if not interval.startswith("__"):
+                    valid_intervals.add(interval)
+
+            # pylint: disable=logging-fstring-interpolation
+            LOGGER.critical(f"provided interval '{self.interval}' is not "
+                            f"in Interval set: {valid_intervals}")
+
+            raise InvalidInterval('invalid interval provided')
+
+        return Interval.MONTH.value
 
     def sync(self, state: dict, stream_schema: dict, stream_metadata: dict, config: dict, transformer: Transformer) -> dict:
         """
@@ -79,6 +119,8 @@ class IncrementalStream(BaseStream):
         :param transformer: A singer Transformer object
         :return: State data in the form of a dictionary
         """
+        if config.get('interval'):
+            self.set_interval(config.get('interval'))
         start_date = singer.get_bookmark(state, self.tap_stream_id, self.replication_key, config['start_date'])
         max_record_value = start_date
 
@@ -139,21 +181,33 @@ class Conversations(IncrementalStream):
     valid_replication_keys = ['updated_at_datestring']
 
     def get_records(self, start_date, is_parent=False):
-        start_dt = singer.utils.strptime_to_utc(start_date)
-        end_dt = start_dt + datetime.timedelta(days=31)
-        start = datetime_to_unix_ms(start_dt)
-        end = datetime_to_unix_ms(end_dt)
+        created_after = singer.utils.strptime_to_utc(start_date)
+        end_dt = singer.utils.now()
+        add_interval = datetime.timedelta(hours=self.get_interval())
+        loop = True
 
-        params = {'created_before': end, 'created_after': start}
-        response = self.client.get_conversations(params=params)
+        while loop:
+            if (created_after + add_interval) < end_dt:
+                created_before = created_after + add_interval
+            else:
+                loop = False
+                created_before = end_dt
 
-        if is_parent:
-            yield (record['id'] for record in response)
-        else:
-            for record in response:
-                record['updated_at_datestring'] = unix_ms_to_date(record['updated_at'])
+            start = datetime_to_unix_ms(created_after)
+            end = datetime_to_unix_ms(created_before)
 
-            yield from response
+            params = {'created_before': end, 'created_after': start}
+            response = self.client.get_conversations(params=params)
+
+            if is_parent:
+                yield (record['id'] for record in response)
+            else:
+                for record in response:
+                    record['updated_at_datestring'] = unix_ms_to_date(record['updated_at'])
+
+                yield from response
+
+            created_after = created_before
 
 
 class Messages(IncrementalStream):
