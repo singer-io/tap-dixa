@@ -1,5 +1,6 @@
 import datetime
 import time
+from typing import Iterator
 
 import pytz
 
@@ -10,3 +11,9 @@ def unix_ms_to_date(ms: int) -> datetime.datetime:
 
 def datetime_to_unix_ms(datetime_obj: datetime.datetime) -> int:
     return int(time.mktime(datetime_obj.timetuple()) * 1000)
+
+
+def create_csid_params(csids: Iterator) -> dict:
+    return {
+        'csids': ','.join(map(str, csids))
+    }

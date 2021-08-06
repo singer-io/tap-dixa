@@ -4,7 +4,7 @@ import singer
 from singer import Transformer, metrics
 
 from tap_dixa.client import Client
-from tap_dixa.helpers import datetime_to_unix_ms, unix_ms_to_date
+from tap_dixa.helpers import create_csid_params, datetime_to_unix_ms, unix_ms_to_date
 
 LOGGER = singer.get_logger()
 
@@ -25,7 +25,7 @@ class BaseStream:
     def __init__(self, client: Client):
         self.client = client
 
-    def get_records(self, start_date: str, is_parent: bool = False) -> list:
+    def get_records(self, start_date: str = None, is_parent: bool = False) -> list:
         """
         Returns a list of records for that stream.
 
@@ -44,15 +44,15 @@ class BaseStream:
         """
         self.params = params
 
-    def get_parent_data(self, config: dict = None) -> list:
+    def get_parent_data(self, start_date: str = None) -> list:
         """
         Returns a list of records from the parent stream.
 
-        :param config: The tap config file
+        :param start_date: The tap start date
         :return: A list of records
         """
         parent = self.parent(self.client)
-        return parent.get_records(config, is_parent=True)
+        return parent.get_records(start_date, is_parent=True)
 
 
 class IncrementalStream(BaseStream):
@@ -147,10 +147,13 @@ class Conversations(IncrementalStream):
         params = {'created_before': end, 'created_after': start}
         response = self.client.get_conversations(params=params)
 
-        for record in response:
-            record['updated_at_datestring'] = unix_ms_to_date(record['updated_at'])
+        if is_parent:
+            yield (record['id'] for record in response)
+        else:
+            for record in response:
+                record['updated_at_datestring'] = unix_ms_to_date(record['updated_at'])
 
-        yield from response
+            yield from response
 
 
 class Messages(IncrementalStream):
@@ -177,7 +180,27 @@ class Messages(IncrementalStream):
         yield from response
 
 
+class ActivityLogs(IncrementalStream):
+    """
+    Get messages from the Dixa platform.
+    """
+    tap_stream_id = 'activity_logs'
+    key_properties = ['id']
+    replication_key = 'activity_timestamp'
+    valid_replication_keys = ['activity_timestamp']
+    parent = Conversations
+
+    def get_records(self, start_date, is_parent=False):
+
+        for conversation_ids in self.get_parent_data(start_date):
+            params = create_csid_params(conversation_ids)
+            response = self.client.get_activity_logs(params=params)
+
+            yield from response['data']
+
+
 STREAMS = {
     'conversations': Conversations,
     'messages': Messages,
+    'activity_logs': ActivityLogs,
 }
