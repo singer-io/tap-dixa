@@ -4,7 +4,7 @@ from singer import utils
 from tap_dixa.discover import discover
 from tap_dixa.sync import sync
 
-REQUIRED_CONFIG_KEYS = ["start_date", "username", "password"]
+REQUIRED_CONFIG_KEYS = ["start_date", "api_token"]
 LOGGER = singer.get_logger()
 
 

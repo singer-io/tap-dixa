@@ -7,6 +7,7 @@ from singer.catalog import Catalog
 from tap_dixa.streams import STREAMS
 
 
+
 def get_abs_path(path):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
 
@@ -32,18 +33,23 @@ def get_schemas():
         with open(schema_path) as file:
             schema = json.load(file)
 
+        if stream_object.replication_method == 'INCREMENTAL':
+            replication_keys = stream_object.valid_replication_keys
+        else:
+            replication_keys = None
+
         meta = metadata.get_standard_metadata(
             schema=schema,
             key_properties=stream_object.key_properties,
-            replication_method=stream_object.replication_method
+            replication_method=stream_object.replication_method,
+            valid_replication_keys=replication_keys,
         )
 
         meta = metadata.to_map(meta)
 
-        if stream_object.valid_replication_keys:
-            meta = metadata.write(meta, (), 'valid-replication-keys', stream_object.valid_replication_keys)
-        if stream_object.replication_key:
-            meta = metadata.write(meta, ('properties', stream_object.replication_key), 'inclusion', 'automatic')
+        if replication_keys:
+            for replication_key in replication_keys:
+                meta = metadata.write(meta, ('properties', replication_key), 'inclusion', 'automatic')
 
         meta = metadata.to_list(meta)
 
