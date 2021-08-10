@@ -31,6 +31,10 @@ class DixaClient429Error(DixaclientError):
     pass
 
 
+class DixaClient422Error(DixaclientError):
+    pass
+
+
 ERROR_CODE_EXCEPTION_MAPPING = {
     500: {
         'raise_exception': DixaClient5xxError,
@@ -51,6 +55,10 @@ ERROR_CODE_EXCEPTION_MAPPING = {
     429: {
         'raise_exception': DixaClient429Error,
         'message': 'API limit has been reached'
+    },
+    422: {
+        'raise_exception': DixaClient422Error,
+        'message': 'Exceeded max allowed 10 csids per request'
     },
 }
 
