@@ -5,7 +5,7 @@ import singer
 from singer import Transformer, metrics
 
 from tap_dixa.client import Client
-from tap_dixa.helpers import (create_csid_params, datetime_to_unix_ms,
+from tap_dixa.helpers import (chunks, create_csid_params, datetime_to_unix_ms,
                               unix_ms_to_date)
 
 LOGGER = singer.get_logger()
@@ -200,7 +200,10 @@ class Conversations(IncrementalStream):
             response = self.client.get_conversations(params=params)
 
             if is_parent:
-                yield (record['id'] for record in response)
+                # Chunk into max 10 csids to avoid 422 error
+                # on activity logs endpoint
+                conversation_ids = [record['id'] for record in response]
+                yield from chunks(conversation_ids)
             else:
                 for record in response:
                     record['updated_at_datestring'] = unix_ms_to_date(record['updated_at'])

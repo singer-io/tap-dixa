@@ -66,29 +66,6 @@
         "object"
       ],
       "properties": {
-        "note": {
-          "type": [
-            "null",
-            "string"
-          ]
-        },
-        "avatal_url": {
-          "type": [
-            "null"
-          ]
-        },
-        "claimed_from_label": {
-          "type": [
-            "null",
-            "string"
-          ]
-        },
-        "claimed_from_type": {
-          "type": [
-            "null",
-            "string"
-          ]
-        },
         "agent": {
           "type": [
             "null",
@@ -119,6 +96,18 @@
             }
           }
         },
+        "agent_names": {
+          "type": [
+            "null",
+            "array"
+          ],
+          "items": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
         "agent_id": {
           "type": [
             "null",
@@ -126,6 +115,18 @@
           ]
         },
         "agent_name": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "template_name": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "conversation_subject": {
           "type": [
             "null",
             "string"
@@ -143,23 +144,23 @@
             "string"
           ]
         },
-        "conversation_subject": {
+        "avatal_url": {
           "type": [
             "null",
             "string"
           ]
         },
-        "agent_names": {
+        "tag_added": {
           "type": [
             "null",
-            "array"
-          ],
-          "items": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
+            "string"
+          ]
+        },
+        "note": {
+          "type": [
+            "null",
+            "string"
+          ]
         }
       }
     }

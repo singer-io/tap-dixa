@@ -17,3 +17,8 @@ def create_csid_params(csids: Iterator) -> dict:
     return {
         'csids': ','.join(map(str, csids))
     }
+
+
+def chunks(arr, chunk_size=10):
+    for i in range(0, len(arr), chunk_size):
+        yield arr[i:i + chunk_size]
