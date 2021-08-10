@@ -90,7 +90,8 @@
     },
     "voicemail_url": {
       "type": [
-        "null"
+        "null",
+        "string"
       ]
     },
     "recording_url": {
@@ -128,6 +129,18 @@
           "string"
         ]
       }
+    },
+    "bcc": {
+      "type": [
+        "null",
+        "array"
+      ]
+    },
+    "cc": {
+      "type": [
+        "null",
+        "array"
+      ]
     },
     "to": {
       "type": [
