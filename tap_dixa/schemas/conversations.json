@@ -78,12 +78,14 @@
     },
     "rating_score": {
       "type": [
-        "null"
+        "null",
+        "integer"
       ]
     },
     "rating_message": {
       "type": [
-        "null"
+        "null",
+        "string"
       ]
     },
     "direction": {
@@ -166,12 +168,14 @@
     },
     "facebook_page_id": {
       "type": [
-        "null"
+        "null",
+        "string"
       ]
     },
     "facebook_page_name": {
       "type": [
-        "null"
+        "null",
+        "string"
       ]
     },
     "widget_id": {
@@ -212,7 +216,8 @@
     },
     "originating_country": {
       "type": [
-        "null"
+        "null",
+        "string"
       ]
     },
     "updated_at": {
@@ -235,7 +240,8 @@
     },
     "transferee_number": {
       "type": [
-        "null"
+        "null",
+        "string"
       ]
     },
     "from_provisioned_phone_number_id": {
@@ -246,7 +252,8 @@
     },
     "from_provisioned_phone_number_name": {
       "type": [
-        "null"
+        "null",
+        "string"
       ]
     },
     "subject": {
@@ -257,7 +264,8 @@
     },
     "anonymized_at": {
       "type": [
-        "null"
+        "null",
+        "integer"
       ]
     },
     "tags": {
@@ -323,7 +331,8 @@
           },
           "rating_message": {
             "type": [
-              "null"
+              "null",
+              "string"
             ]
           },
           "rating_type": {
