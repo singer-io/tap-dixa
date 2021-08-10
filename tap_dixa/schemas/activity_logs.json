@@ -86,12 +86,14 @@
             },
             "email": {
               "type": [
-                "null"
+                "null",
+                "string"
               ]
             },
             "phone_number": {
               "type": [
-                "null"
+                "null",
+                "string"
               ]
             }
           }
