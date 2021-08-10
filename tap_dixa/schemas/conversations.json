@@ -16,6 +16,12 @@
         "integer"
       ]
     },
+    "updated_at_datestring": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
     "initial_channel": {
       "type": [
         "null",
@@ -170,12 +176,14 @@
     },
     "widget_id": {
       "type": [
-        "null"
+        "null",
+        "string"
       ]
     },
     "widget_name": {
       "type": [
-        "null"
+        "null",
+        "string"
       ]
     },
     "conversation_wrapup_notes": {
@@ -192,12 +200,14 @@
     },
     "transferee_name": {
       "type": [
-        "null"
+        "null",
+        "string"
       ]
     },
     "transfer_time": {
       "type": [
-        "null"
+        "null",
+        "integer"
       ]
     },
     "originating_country": {
@@ -209,12 +219,6 @@
       "type": [
         "null",
         "integer"
-      ]
-    },
-    "updated_at_datestring": {
-      "type": [
-        "null",
-        "string"
       ]
     },
     "last_message_created_at": {
@@ -255,6 +259,139 @@
       "type": [
         "null"
       ]
+    },
+    "tags": {
+      "type": [
+        "null",
+        "array"
+      ],
+      "items": {
+        "type": [
+          "null",
+          "string"
+        ]
+      }
+    },
+    "tags_info": {
+      "type": [
+        "null",
+        "array"
+      ],
+      "items": {
+        "type": [
+          "null",
+          "object"
+        ],
+        "properties": {
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "is_deactivated": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      }
+    },
+    "ratings": {
+      "type": [
+        "null",
+        "array"
+      ],
+      "items": {
+        "type": [
+          "null",
+          "object"
+        ],
+        "properties": {
+          "rating_score": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "rating_message": {
+            "type": [
+              "null"
+            ]
+          },
+          "rating_type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rating_created_timestamp": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "rating_offered_timestamp": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "rating_status": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rating_language": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rating_modified_timestamp": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "rating_rated_timestamp": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "rating_scheduled_timestamp": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "rating_scheduled_for_timestamp": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "rating_unscheduled_timestamp": {
+            "type": [
+              "null"
+            ]
+          },
+          "rating_cancelled_timestamp": {
+            "type": [
+              "null"
+            ]
+          }
+        }
+      }
     }
   }
 }

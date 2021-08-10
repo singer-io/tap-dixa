@@ -60,18 +60,74 @@
     },
     "from_phone_number": {
       "type": [
-        "null"
+        "null",
+        "string"
       ]
     },
     "to_phone_number": {
       "type": [
-        "null"
+        "null",
+        "string"
       ]
     },
     "duration": {
       "type": [
+        "null",
+        "integer"
+      ]
+    },
+    "from": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "is_automated_message": {
+      "type": [
+        "null",
+        "boolean"
+      ]
+    },
+    "voicemail_url": {
+      "type": [
         "null"
       ]
+    },
+    "recording_url": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "chat_input_question": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "chat_input_answer": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "chat_menu_text": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "attached_files": {
+      "type": [
+        "null",
+        "array"
+      ],
+      "items": {
+        "type": [
+          "null",
+          "string"
+        ]
+      }
     },
     "to": {
       "type": [
@@ -84,42 +140,6 @@
           "string"
         ]
       }
-    },
-    "from": {
-      "type": [
-        "null",
-        "string"
-      ]
-    },
-    "is_automated_message": {
-      "type": [
-        "null"
-      ]
-    },
-    "voicemail_url": {
-      "type": [
-        "null"
-      ]
-    },
-    "recording_url": {
-      "type": [
-        "null"
-      ]
-    },
-    "chat_input_question": {
-      "type": [
-        "null"
-      ]
-    },
-    "chat_input_answer": {
-      "type": [
-        "null"
-      ]
-    },
-    "chat_menu_text": {
-      "type": [
-        "null"
-      ]
     }
   }
 }
