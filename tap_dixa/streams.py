@@ -223,18 +223,30 @@ class Messages(IncrementalStream):
     valid_replication_keys = ['updated_at_datestring']
 
     def get_records(self, start_date, is_parent=False):
-        start_dt = singer.utils.strptime_to_utc(start_date)
-        end_dt = start_dt + datetime.timedelta(days=31)
-        start = datetime_to_unix_ms(start_dt)
-        end = datetime_to_unix_ms(end_dt)
+        created_after = singer.utils.strptime_to_utc(start_date)
+        end_dt = singer.utils.now()
+        add_interval = datetime.timedelta(hours=self.get_interval())
+        loop = True
 
-        params = {'created_before': end, 'created_after': start}
-        response = self.client.get_messages(params=params)
+        while loop:
+            if (created_after + add_interval) < end_dt:
+                created_before = created_after + add_interval
+            else:
+                loop = False
+                created_before = end_dt
 
-        for record in response:
-            record['updated_at_datestring'] = unix_ms_to_date(end)
+            start = datetime_to_unix_ms(created_after)
+            end = datetime_to_unix_ms(created_before)
 
-        yield from response
+            params = {'created_before': end, 'created_after': start}
+            response = self.client.get_messages(params=params)
+
+            for record in response:
+                record['updated_at_datestring'] = unix_ms_to_date(end)
+
+            yield from response
+
+            created_after = created_before
 
 
 class ActivityLogs(IncrementalStream):
