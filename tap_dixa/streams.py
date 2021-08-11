@@ -265,7 +265,7 @@ class ActivityLogs(IncrementalStream):
             params = create_csid_params(conversation_ids)
             response = self.client.get_activity_logs(params=params)
 
-            yield from response['data']
+            yield from response.get('data', [])
 
 
 STREAMS = {

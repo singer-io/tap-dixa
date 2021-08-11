@@ -8,30 +8,30 @@ from singer import get_logger
 LOGGER = get_logger()
 
 
-class DixaclientError(Exception):
+class DixaClientError(Exception):
     def __init__(self, message=None, response=None):
         super().__init__(message)
         self.message = message
         self.response = response
 
 
-class DixaClient5xxError(DixaclientError):
+class DixaClient5xxError(DixaClientError):
     pass
 
 
-class DixaClient401Error(DixaclientError):
+class DixaClient401Error(DixaClientError):
     pass
 
 
-class DixaClient400Error(DixaclientError):
+class DixaClient400Error(DixaClientError):
     pass
 
 
-class DixaClient429Error(DixaclientError):
+class DixaClient429Error(DixaClientError):
     pass
 
 
-class DixaClient422Error(DixaclientError):
+class DixaClient422Error(DixaClientError):
     pass
 
 
@@ -70,13 +70,13 @@ def raise_for_error(resp):
         try:
             error_code = resp.status_code
             client_exception = ERROR_CODE_EXCEPTION_MAPPING.get(error_code, {})
-            exc = client_exception.get('raise_exception', DixaclientError)
+            exc = client_exception.get('raise_exception', DixaClientError)
             message = client_exception.get('message', 'Client Error')
 
             raise exc(message, resp) from None
 
         except (ValueError, TypeError):
-            raise DixaclientError(error) from None
+            raise DixaClientError(error) from None
 
 
 def retry_after_wait_gen():
@@ -136,13 +136,13 @@ class Client:
 
             return response.json()
 
-    def get_conversations(self, params):
+    def get_conversations(self, params=None):
         self._base_url = DixaURL.exports.value
         self._set_auth_header()
         url = self._build_url('/v1/conversation_export')
         return self._get(url, headers=self._headers, params=params)
 
-    def get_messages(self, params):
+    def get_messages(self, params=None):
         self._base_url = DixaURL.exports.value
         self._set_auth_header()
         url = self._build_url('/v1/message_export')
