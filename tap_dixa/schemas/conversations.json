@@ -391,12 +391,14 @@
           },
           "rating_unscheduled_timestamp": {
             "type": [
-              "null"
+              "null",
+              "string"
             ]
           },
           "rating_cancelled_timestamp": {
             "type": [
-              "null"
+              "null",
+              "string"
             ]
           }
         }
