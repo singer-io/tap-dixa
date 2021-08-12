@@ -136,20 +136,8 @@ class Client:
 
             return response.json()
 
-    def get_conversations(self, params=None):
-        self._base_url = DixaURL.exports.value
+    def get(self, base_url, endpoint, params=None):
+        self._base_url = base_url
         self._set_auth_header()
-        url = self._build_url('/v1/conversation_export')
-        return self._get(url, headers=self._headers, params=params)
-
-    def get_messages(self, params=None):
-        self._base_url = DixaURL.exports.value
-        self._set_auth_header()
-        url = self._build_url('/v1/message_export')
-        return self._get(url, headers=self._headers, params=params)
-
-    def get_activity_logs(self, params=None):
-        self._base_url = DixaURL.integrations.value
-        self._set_auth_header()
-        url = self._build_url('/v1/conversations/activitylog')
+        url = self._build_url(endpoint)
         return self._get(url, headers=self._headers, params=params)

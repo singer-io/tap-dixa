@@ -4,7 +4,7 @@ from enum import Enum
 import singer
 from singer import Transformer, metrics
 
-from tap_dixa.client import Client
+from tap_dixa.client import Client, DixaURL
 from tap_dixa.helpers import (chunks, create_csid_params, datetime_to_unix_ms,
                               unix_ms_to_date)
 
@@ -23,6 +23,8 @@ class BaseStream:
     valid_replication_keys = []
     params = {}
     parent = None
+    endpoint = None
+    base_url = None
 
     def __init__(self, client: Client):
         self.client = client
@@ -179,6 +181,8 @@ class Conversations(IncrementalStream):
     key_properties = ['id']
     replication_key = 'updated_at_datestring'
     valid_replication_keys = ['updated_at_datestring']
+    base_url = DixaURL.exports.value
+    endpoint = '/v1/conversation_export'
 
     def get_records(self, start_date, is_parent=False):
         created_after = singer.utils.strptime_to_utc(start_date)
@@ -197,7 +201,7 @@ class Conversations(IncrementalStream):
             end = datetime_to_unix_ms(created_before)
 
             params = {'created_before': end, 'created_after': start}
-            response = self.client.get_conversations(params=params)
+            response = self.client.get(self.base_url, self.endpoint, params=params)
 
             if is_parent:
                 # Chunk into max 10 csids to avoid 422 error
@@ -221,6 +225,8 @@ class Messages(IncrementalStream):
     key_properties = ['id']
     replication_key = 'updated_at_datestring'
     valid_replication_keys = ['updated_at_datestring']
+    base_url = DixaURL.exports.value
+    endpoint = '/v1/message_export'
 
     def get_records(self, start_date, is_parent=False):
         created_after = singer.utils.strptime_to_utc(start_date)
@@ -239,7 +245,7 @@ class Messages(IncrementalStream):
             end = datetime_to_unix_ms(created_before)
 
             params = {'created_before': end, 'created_after': start}
-            response = self.client.get_messages(params=params)
+            response = self.client.get(self.base_url, self.endpoint, params=params)
 
             for record in response:
                 record['updated_at_datestring'] = unix_ms_to_date(end)
@@ -258,12 +264,14 @@ class ActivityLogs(IncrementalStream):
     replication_key = 'activity_timestamp'
     valid_replication_keys = ['activity_timestamp']
     parent = Conversations
+    base_url = DixaURL.integrations.value
+    endpoint = '/v1/conversations/activitylog'
 
     def get_records(self, start_date, is_parent=False):
 
         for conversation_ids in self.get_parent_data(start_date):
             params = create_csid_params(conversation_ids)
-            response = self.client.get_activity_logs(params=params)
+            response = self.client.get(self.base_url, self.endpoint, params=params)
 
             yield from response.get('data', [])
 
