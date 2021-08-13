@@ -164,3 +164,6 @@ log/
 *catalog*.json
 *state*.json
 generate_schemas.py
+
+# pylint results
+pylint-results.txt

@@ -184,6 +184,7 @@ class Conversations(IncrementalStream):
     base_url = DixaURL.exports.value
     endpoint = '/v1/conversation_export'
 
+    # pylint: disable=signature-differs
     def get_records(self, start_date, is_parent=False):
         created_after = singer.utils.strptime_to_utc(start_date)
         end_dt = singer.utils.now()
@@ -228,6 +229,7 @@ class Messages(IncrementalStream):
     base_url = DixaURL.exports.value
     endpoint = '/v1/message_export'
 
+    # pylint: disable=signature-differs
     def get_records(self, start_date, is_parent=False):
         created_after = singer.utils.strptime_to_utc(start_date)
         end_dt = singer.utils.now()
@@ -267,6 +269,7 @@ class ActivityLogs(IncrementalStream):
     base_url = DixaURL.integrations.value
     endpoint = '/v1/conversations/activitylog'
 
+    # pylint: disable=signature-differs
     def get_records(self, start_date, is_parent=False):
 
         for conversation_ids in self.get_parent_data(start_date):
