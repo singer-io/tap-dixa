@@ -50,26 +50,35 @@ tap-dixa --config config.json --discover > catalog.json
 
 See the Singer docs on discovery mode [here](https://github.com/singer-io/getting-started/blob/master/docs/DISCOVERY_MODE.md#discovery-mode).
 
-4. Run the Tap in Sync Mode (with catalog) and write out to state file
+**NOTE**: By default, discovery mode does not "select" any streams or fields to be synced. In order to be synced, each stream and field must contain a `selected: true` key-value. This is tedious to do by hand but there is [this](https://github.com/chrisgoddard/singer-discover) useful tool that provides a CLI GUI to select streams and fields.
+
+3. Run the Tap in Sync Mode (with catalog) and write out to state file
 
 For Sync mode:
 
 ```bash
-$ tap-dixa --config tap_config.json --catalog catalog.json >> state.json
+$ tap-dixa --config config.json --catalog catalog.json >> state.json
 $ tail -1 state.json > state.json.tmp && mv state.json.tmp state.json
 ```
 
 To load to json files to verify outputs:
 
 ```bash
-$ tap-dixa --config tap_config.json --catalog catalog.json | target-json >> state.json
+$ tap-dixa --config config.json --catalog catalog.json | target-json >> state.json
 $ tail -1 state.json > state.json.tmp && mv state.json.tmp state.json
 ```
 
 To pseudo-load to Stitch Import API with dry run:
 
 ```bash
-$ tap-dixa --config tap_config.json --catalog catalog.json | target-stitch --config target_config.json --dry-run >> state.json
+$ tap-dixa --config config.json --catalog catalog.json | target-stitch --config target_config.json --dry-run >> state.json
+$ tail -1 state.json > state.json.tmp && mv state.json.tmp state.json
+```
+
+**NOTE**: Running sync mode with a `state.json` file to resume running from a prior state:
+
+```bash
+$ tap-dixa --state state.json --config config.json --catalog catalog.json >> state.json
 $ tail -1 state.json > state.json.tmp && mv state.json.tmp state.json
 ```
 
