@@ -9,20 +9,35 @@ from tap_dixa.streams import STREAMS
 
 
 def get_abs_path(path):
+    """
+    Gets the absolute path of the provided relative path.
+    """
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
 
 def _get_key_properties_from_meta(schema_meta):
+    """
+    Retrieves the 'table-key-properties' value from the schema metadata.
+    """
     return schema_meta[0].get('metadata').get('table-key-properties')
 
 def _get_replication_method_from_meta(schema_meta):
+    """
+    Retrieves the 'forced-replication-method' value from the schema metadata.
+    """
     return schema_meta[0].get('metadata').get('forced-replication-method')
 
 def _get_replication_key_from_meta(schema_meta):
+    """
+    Retrieves the 'valid-replication-keys' value from the schema metadata.
+    """
     if _get_replication_method_from_meta(schema_meta) == 'INCREMENTAL':
         return schema_meta[0].get('metadata').get('valid-replication-keys')[0]
     return None
 
 def get_schemas():
+    """
+    Builds the singer schema and metadata dictionaries.
+    """
 
     schemas = {}
     schemas_metadata = {}
@@ -60,6 +75,9 @@ def get_schemas():
 
 
 def discover():
+    """
+    Builds the singer catalog for all the streams in the schemas directory.
+    """
 
     schemas, schemas_metadata = get_schemas()
     streams = []

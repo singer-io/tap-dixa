@@ -60,6 +60,9 @@ class BaseStream:
 
 
 class Interval(Enum):
+    """
+    Enum representing time interval for making API calls.
+    """
     HOUR = 1
     DAY = 24
     WEEK = 24 * 7
@@ -85,6 +88,11 @@ class IncrementalStream(BaseStream):
         super().__init__(client)
 
     def set_interval(self, value):
+        """
+        Sets the interval attribute.
+
+        :param value: The interval string value
+        """
         self.interval = value.upper()
 
     def get_interval(self):
@@ -259,7 +267,7 @@ class Messages(IncrementalStream):
 
 class ActivityLogs(IncrementalStream):
     """
-    Get messages from the Dixa platform.
+    Get activity logs from the Dixa platform.
     """
     tap_stream_id = 'activity_logs'
     key_properties = ['id']
