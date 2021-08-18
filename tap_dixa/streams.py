@@ -132,18 +132,21 @@ class IncrementalStream(BaseStream):
         if config.get('interval'):
             self.set_interval(config.get('interval'))
         start_date = singer.get_bookmark(state, self.tap_stream_id, self.replication_key, config['start_date'])
-        max_record_value = start_date
+        bookmark_datetime = singer.utils.strptime_to_utc(start_date)
+        max_datetime = bookmark_datetime
 
         with metrics.record_counter(self.tap_stream_id) as counter:
             for record in self.get_records(start_date):
                 transformed_record = transformer.transform(record, stream_schema, stream_metadata)
-                record_replication_value = singer.utils.strptime_to_utc(transformed_record[self.replication_key])
-                if record_replication_value >= singer.utils.strptime_to_utc(max_record_value):
+                record_datetime = singer.utils.strptime_to_utc(transformed_record[self.replication_key])
+                if record_datetime >= bookmark_datetime:
                     singer.write_record(self.tap_stream_id, transformed_record)
                     counter.increment()
-                    max_record_value = record_replication_value.isoformat()
+                    max_datetime = max(record_datetime, max_datetime)
 
-        state = singer.write_bookmark(state, self.tap_stream_id, self.replication_key, max_record_value)
+            bookmark_date = singer.utils.strftime(max_datetime)
+
+        state = singer.write_bookmark(state, self.tap_stream_id, self.replication_key, bookmark_date)
         singer.write_state(state)
         return state
 
