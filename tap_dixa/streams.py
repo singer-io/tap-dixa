@@ -29,11 +29,11 @@ class BaseStream:
     def __init__(self, client: Client):
         self.client = client
 
-    def get_records(self, start_date: str = None, is_parent: bool = False) -> list:
+    def get_records(self, start_date: datetime.datetime = None, is_parent: bool = False) -> list:
         """
         Returns a list of records for that stream.
 
-        :param start_date: The start date the stream should use
+        :param start_date: The start date datetime object the stream should use
         :param is_parent: If true, may change the type of data
             that is returned for a child stream to consume
         :return: list of records
@@ -136,7 +136,7 @@ class IncrementalStream(BaseStream):
         max_datetime = bookmark_datetime
 
         with metrics.record_counter(self.tap_stream_id) as counter:
-            for record in self.get_records(start_date):
+            for record in self.get_records(bookmark_datetime):
                 transformed_record = transformer.transform(record, stream_schema, stream_metadata)
                 record_datetime = singer.utils.strptime_to_utc(transformed_record[self.replication_key])
                 if record_datetime >= bookmark_datetime:
@@ -197,7 +197,7 @@ class Conversations(IncrementalStream):
 
     # pylint: disable=signature-differs
     def get_records(self, start_date, is_parent=False):
-        created_after = singer.utils.strptime_to_utc(start_date)
+        created_after = start_date
         end_dt = singer.utils.now()
         add_interval = datetime.timedelta(hours=self.get_interval())
         loop = True
@@ -242,7 +242,7 @@ class Messages(IncrementalStream):
 
     # pylint: disable=signature-differs
     def get_records(self, start_date, is_parent=False):
-        created_after = singer.utils.strptime_to_utc(start_date)
+        created_after = start_date
         end_dt = singer.utils.now()
         add_interval = datetime.timedelta(hours=self.get_interval())
         loop = True
@@ -282,12 +282,29 @@ class ActivityLogs(IncrementalStream):
 
     # pylint: disable=signature-differs
     def get_records(self, start_date, is_parent=False):
+        max_limit = 10_000
+        total_records = max_limit
+        offset = 0
 
-        for conversation_ids in self.get_parent_data(start_date):
-            params = create_csid_params(conversation_ids)
+        params = {
+            'fromDatetime': start_date.isoformat(),
+            'toDatetime': datetime.datetime.now().isoformat(),
+            'fromPage': offset,
+            'limit': max_limit
+        }
+
+        while total_records == max_limit:
+
             response = self.client.get(self.base_url, self.endpoint, params=params)
 
-            yield from response.get('data', [])
+            # Increment the offset
+            params['fromPage'] += 1
+
+            # Get the record count
+            data = response.get('data', [])
+            total_records = len(data)
+
+            yield from data
 
 
 STREAMS = {

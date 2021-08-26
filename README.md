@@ -24,7 +24,7 @@ The tap accepts the following config items:
 
 | field                  | type   | required | description                                                                                                                                                                                                |
 |------------------------|--------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| api_token          | string | yes      | [How to generate an API token](https://support.dixa.help/en/articles/259-how-to-generate-an-api-token)                         |
+| api_token          | string | yes      | [How to generate an API token](https://docs.dixa.io/docs/tutorial-create-an-api-token)                         |
 | start_date             | string | yes      | ISO-8601  Example: "2021-08-03" or "2021-08-10T21:24:59.036000+00:00"                                                                                                                                             |
 | interval            | string | no       | One of the following: "HOUR", "DAY", "WEEK", "MONTH". Default is "MONTH". Interval is used for determing the time interval for the `created_after` and `created_before` query string parameters for the conversations and messages streams.        |
 
