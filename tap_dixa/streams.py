@@ -5,7 +5,7 @@ import singer
 from singer import Transformer, metrics
 
 from tap_dixa.client import Client, DixaURL
-from tap_dixa.helpers import (chunks, create_csid_params, datetime_to_unix_ms,
+from tap_dixa.helpers import (chunks, create_csid_params, date_to_rfc3339, datetime_to_unix_ms,
                               unix_ms_to_date)
 
 LOGGER = singer.get_logger()
@@ -274,8 +274,8 @@ class ActivityLogs(IncrementalStream):
     """
     tap_stream_id = 'activity_logs'
     key_properties = ['id']
-    replication_key = 'activity_timestamp'
-    valid_replication_keys = ['activity_timestamp']
+    replication_key = 'activityTimestamp'
+    valid_replication_keys = ['activityTimestamp']
     parent = Conversations
     base_url = DixaURL.integrations.value
     endpoint = '/v1/conversations/activitylog'
@@ -285,10 +285,12 @@ class ActivityLogs(IncrementalStream):
         max_limit = 10_000
         total_records = max_limit
         offset = 0
+        from_datetime = date_to_rfc3339(start_date.isoformat())
+        to_datetime = date_to_rfc3339(datetime.datetime.utcnow().isoformat())
 
         params = {
-            'fromDatetime': start_date.isoformat(),
-            'toDatetime': datetime.datetime.now().isoformat(),
+            'fromDatetime': from_datetime,
+            'toDatetime': to_datetime,
             'fromPage': offset,
             'limit': max_limit
         }

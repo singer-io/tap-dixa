@@ -1,8 +1,7 @@
 import datetime
-import time
 from typing import Iterator
 
-import pytz
+import singer
 
 
 def unix_ms_to_date(ms: int) -> str:
@@ -52,3 +51,10 @@ def chunks(arr, chunk_size=10):
     """
     for i in range(0, len(arr), chunk_size):
         yield arr[i:i + chunk_size]
+
+
+def date_to_rfc3339(date: str) -> str:
+    """Converts date to rfc 3339"""
+    d = singer.utils.strptime_to_utc(date)
+
+    return d.strftime('%Y-%m-%dT%H:%M:%SZ')

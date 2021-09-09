@@ -1,171 +1,171 @@
 {
   "type": [
-    "null",
-    "object"
+      "null",
+      "object"
   ],
   "properties": {
-    "id": {
-      "type": [
-        "null",
-        "string"
-      ]
-    },
-    "conversation_id": {
-      "type": [
-        "null",
-        "integer"
-      ]
-    },
-    "activity_timestamp": {
-      "type": [
-        "null",
-        "string"
-      ],
-      "format": "date-time"
-    },
-    "activity_type": {
-      "type": [
-        "null",
-        "string"
-      ]
-    },
-    "author": {
-      "type": [
-        "null",
-        "object"
-      ],
-      "properties": {
-        "id": {
+      "id": {
           "type": [
-            "null",
-            "string"
-          ]
-        },
-        "name": {
-          "type": [
-            "null",
-            "string"
-          ]
-        },
-        "email": {
-          "type": [
-            "null",
-            "string"
-          ]
-        },
-        "phone_number": {
-          "type": [
-            "null",
-            "string"
-          ]
-        }
-      }
-    },
-    "attributes": {
-      "type": [
-        "null",
-        "object"
-      ],
-      "properties": {
-        "agent": {
-          "type": [
-            "null",
-            "object"
-          ],
-          "properties": {
-            "id": {
-              "type": [
-                "null",
-                "string"
-              ]
-            },
-            "name": {
-              "type": [
-                "null",
-                "string"
-              ]
-            },
-            "email": {
-              "type": [
-                "null",
-                "string"
-              ]
-            },
-            "phone_number": {
-              "type": [
-                "null",
-                "string"
-              ]
-            }
-          }
-        },
-        "agent_names": {
-          "type": [
-            "null",
-            "array"
-          ],
-          "items": {
-            "type": [
               "null",
               "string"
-            ]
+          ]
+      },
+      "conversationId": {
+          "type": [
+              "null",
+              "integer"
+          ]
+      },
+      "activityTimestamp": {
+          "type": [
+              "null",
+              "string"
+          ],
+          "format": "date-time"
+      },
+      "activityType": {
+          "type": [
+              "null",
+              "string"
+          ]
+      },
+      "author": {
+          "type": [
+              "null",
+              "object"
+          ],
+          "properties": {
+              "id": {
+                  "type": [
+                      "null",
+                      "string"
+                  ]
+              },
+              "name": {
+                  "type": [
+                      "null",
+                      "string"
+                  ]
+              },
+              "email": {
+                  "type": [
+                      "null",
+                      "string"
+                  ]
+              },
+              "phoneNumber": {
+                  "type": [
+                      "null",
+                      "string"
+                  ]
+              }
           }
-        },
-        "agent_id": {
+      },
+      "attributes": {
           "type": [
-            "null",
-            "string"
-          ]
-        },
-        "agent_name": {
-          "type": [
-            "null",
-            "string"
-          ]
-        },
-        "template_name": {
-          "type": [
-            "null",
-            "string"
-          ]
-        },
-        "conversation_subject": {
-          "type": [
-            "null",
-            "string"
-          ]
-        },
-        "message_id": {
-          "type": [
-            "null",
-            "string"
-          ]
-        },
-        "from_endpoint": {
-          "type": [
-            "null",
-            "string"
-          ]
-        },
-        "avatal_url": {
-          "type": [
-            "null",
-            "string"
-          ]
-        },
-        "tag_added": {
-          "type": [
-            "null",
-            "string"
-          ]
-        },
-        "note": {
-          "type": [
-            "null",
-            "string"
-          ]
-        }
+              "null",
+              "object"
+          ],
+          "properties": {
+              "agent": {
+                  "type": [
+                      "null",
+                      "object"
+                  ],
+                  "properties": {
+                      "id": {
+                          "type": [
+                              "null",
+                              "string"
+                          ]
+                      },
+                      "name": {
+                          "type": [
+                              "null",
+                              "string"
+                          ]
+                      },
+                      "email": {
+                          "type": [
+                              "null",
+                              "string"
+                          ]
+                      },
+                      "phoneNumber": {
+                          "type": [
+                              "null",
+                              "string"
+                          ]
+                      }
+                  }
+              },
+              "agentNames": {
+                  "type": [
+                      "null",
+                      "array"
+                  ],
+                  "items": {
+                      "type": [
+                          "null",
+                          "string"
+                      ]
+                  }
+              },
+              "agentId": {
+                  "type": [
+                      "null",
+                      "string"
+                  ]
+              },
+              "agentName": {
+                  "type": [
+                      "null",
+                      "string"
+                  ]
+              },
+              "templateName": {
+                  "type": [
+                      "null",
+                      "string"
+                  ]
+              },
+              "conversationSubject": {
+                  "type": [
+                      "null",
+                      "string"
+                  ]
+              },
+              "messageId": {
+                  "type": [
+                      "null",
+                      "string"
+                  ]
+              },
+              "fromEndpoint": {
+                  "type": [
+                      "null",
+                      "string"
+                  ]
+              },
+              "avatalUrl": {
+                  "type": [
+                      "null",
+                      "string"
+                  ]
+              },
+              "tagAdded": {
+                  "type": [
+                      "null",
+                      "string"
+                  ]
+              },
+              "note": {
+                  "type": [
+                      "null",
+                      "string"
+                  ]
+              }
+          }
       }
-    }
   }
 }
