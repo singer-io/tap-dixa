@@ -43,3 +43,14 @@ def test_chunks():
 
     for case in test_cases:
         assert case['expected'] == list(helpers.chunks(case['case'], chunk_size=case['arg']))
+
+
+def test_get_next_page_key():
+    test_cases = [
+        {'case': 'https://www.example.com/api/v1/some/path?some=query_string', 'expected': {'some': 'query_string'}},
+        {'case': '/api/v1/some/path?qs=abc123', 'expected': {'qs': 'abc123'}},
+        {'case': None, 'expected': {}},
+    ]
+
+    for case in test_cases:
+        assert case['expected'] == helpers.get_next_page_key(case['case'])
