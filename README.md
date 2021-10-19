@@ -8,9 +8,9 @@ This tap:
 
 - Pulls data from the [Dixa API](https://support.dixa.help/en/categories/65-dixa-api-s)
 - Extracts from the following sources to produce [streams](tap_dixa/streams.py). Below is a list of all the streams available.
-  - [Conversations](https://support.dixa.help/en/articles/174-export-conversations-via-api)
-  - [Messages](https://support.dixa.help/en/articles/219-export-messages-via-api)
-  - [Activity Log](https://integrations.dixa.io/docs#/ActivityLog)
+  - [Conversations](https://docs.dixa.io/docs/export-conversations-via-api)
+  - [Messages](https://docs.dixa.io/docs/export-messages-via-api)
+  - [Activity Log](https://docs.dixa.io/reference/getconversationsactivitylog)
 
 - Includes a schema for each resource. See the [schemas](tap_dixa/schemas) folder for details.
 
