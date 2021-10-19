@@ -6,7 +6,7 @@ spec](https://github.com/singer-io/getting-started/blob/master/SPEC.md).
 
 This tap:
 
-- Pulls data from the [Dixa API](https://support.dixa.help/en/categories/65-dixa-api-s)
+- Pulls data from the [Dixa API](https://docs.dixa.io/docs/introduction)
 - Extracts from the following sources to produce [streams](tap_dixa/streams.py). Below is a list of all the streams available.
   - [Conversations](https://docs.dixa.io/docs/export-conversations-via-api)
   - [Messages](https://docs.dixa.io/docs/export-messages-via-api)
