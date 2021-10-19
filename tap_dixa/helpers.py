@@ -1,5 +1,6 @@
 import datetime
 from typing import Iterator
+from urllib.parse import parse_qsl, urlparse
 
 import singer
 
@@ -58,3 +59,13 @@ def date_to_rfc3339(date: str) -> str:
     d = singer.utils.strptime_to_utc(date)
 
     return d.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
+def get_next_page_key(url_part: str) -> dict:
+    """
+    Parses out and returns the `pageKey` value returned in the meta
+    key from the API
+    """
+    parsed_url = urlparse(url_part)
+
+    return dict(parse_qsl(parsed_url.query))

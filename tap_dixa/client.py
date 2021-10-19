@@ -93,7 +93,7 @@ def retry_after_wait_gen():
     to backoff for in seconds.
     """
     while True:
-        sleep_time = 1
+        sleep_time = 60
         LOGGER.info("API rate limit exceeded -- sleeping for %s seconds", sleep_time)
         yield sleep_time
 
