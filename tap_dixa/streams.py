@@ -4,11 +4,12 @@ from enum import Enum
 import singer
 from singer import Transformer, metrics
 
-from tap_dixa.client import Client, DixaURL
-from tap_dixa.helpers import (chunks, date_to_rfc3339, datetime_to_unix_ms,
-                              get_next_page_key, unix_ms_to_date)
+from .client import Client, DixaURL
+from .exceptions import InvalidInterval
+from .helpers import chunks, date_to_rfc3339, datetime_to_unix_ms, get_next_page_key, unix_ms_to_date
 
 LOGGER = singer.get_logger()
+
 
 class BaseStream:
     """
@@ -16,6 +17,7 @@ class BaseStream:
 
     :param client: The API client used extract records from the external source
     """
+
     tap_stream_id = None
     replication_method = None
     replication_key = None
@@ -38,7 +40,8 @@ class BaseStream:
             that is returned for a child stream to consume
         :return: list of records
         """
-        raise NotImplementedError("Child classes of BaseStream require implementation")
+        raise NotImplementedError(
+            "Child classes of BaseStream require implementation")
 
     def set_parameters(self, params: dict) -> None:
         """
@@ -63,14 +66,11 @@ class Interval(Enum):
     """
     Enum representing time interval for making API calls.
     """
+
     HOUR = 1
     DAY = 24
     WEEK = 24 * 7
     MONTH = 24 * 31
-
-
-class InvalidInterval(Exception):
-    pass
 
 
 class IncrementalStream(BaseStream):
@@ -80,7 +80,8 @@ class IncrementalStream(BaseStream):
 
     :param client: The API client used extract records from the external source
     """
-    replication_method = 'INCREMENTAL'
+
+    replication_method = "INCREMENTAL"
     batched = False
     interval = None
 
@@ -111,14 +112,16 @@ class IncrementalStream(BaseStream):
                     valid_intervals.add(interval)
 
             # pylint: disable=logging-fstring-interpolation
-            LOGGER.critical(f"provided interval '{self.interval}' is not "
-                            f"in Interval set: {valid_intervals}")
+            LOGGER.critical(
+                f"provided interval '{self.interval}' is not " f"in Interval set: {valid_intervals}")
 
-            raise InvalidInterval('invalid interval provided')
+            raise InvalidInterval("invalid interval provided")
 
         return Interval.MONTH.value
 
-    def sync(self, state: dict, stream_schema: dict, stream_metadata: dict, config: dict, transformer: Transformer) -> dict:
+    def sync(
+        self, state: dict, stream_schema: dict, stream_metadata: dict, config: dict, transformer: Transformer
+    ) -> dict:
         """
         The sync logic for an incremental stream.
 
@@ -129,16 +132,19 @@ class IncrementalStream(BaseStream):
         :param transformer: A singer Transformer object
         :return: State data in the form of a dictionary
         """
-        if config.get('interval'):
-            self.set_interval(config.get('interval'))
-        start_date = singer.get_bookmark(state, self.tap_stream_id, self.replication_key, config['start_date'])
+        if config.get("interval"):
+            self.set_interval(config.get("interval"))
+        start_date = singer.get_bookmark(
+            state, self.tap_stream_id, self.replication_key, config["start_date"])
         bookmark_datetime = singer.utils.strptime_to_utc(start_date)
         max_datetime = bookmark_datetime
 
         with metrics.record_counter(self.tap_stream_id) as counter:
             for record in self.get_records(bookmark_datetime):
-                transformed_record = transformer.transform(record, stream_schema, stream_metadata)
-                record_datetime = singer.utils.strptime_to_utc(transformed_record[self.replication_key])
+                transformed_record = transformer.transform(
+                    record, stream_schema, stream_metadata)
+                record_datetime = singer.utils.strptime_to_utc(
+                    transformed_record[self.replication_key])
                 if record_datetime >= bookmark_datetime:
                     singer.write_record(self.tap_stream_id, transformed_record)
                     counter.increment()
@@ -146,7 +152,8 @@ class IncrementalStream(BaseStream):
 
             bookmark_date = singer.utils.strftime(max_datetime)
 
-        state = singer.write_bookmark(state, self.tap_stream_id, self.replication_key, bookmark_date)
+        state = singer.write_bookmark(
+            state, self.tap_stream_id, self.replication_key, bookmark_date)
         singer.write_state(state)
         return state
 
@@ -158,12 +165,15 @@ class FullTableStream(BaseStream):
 
     :param client: The API client used extract records from the external source
     """
-    replication_method = 'FULL_TABLE'
+
+    replication_method = "FULL_TABLE"
 
     def __init__(self, client):
         super().__init__(client)
 
-    def sync(self, state: dict, stream_schema: dict, stream_metadata: dict, config: dict, transformer: Transformer) -> dict:
+    def sync(
+        self, state: dict, stream_schema: dict, stream_metadata: dict, config: dict, transformer: Transformer
+    ) -> dict:
         """
         The sync logic for an full table stream.
 
@@ -176,7 +186,8 @@ class FullTableStream(BaseStream):
         """
         with metrics.record_counter(self.tap_stream_id) as counter:
             for record in self.get_records(config):
-                transformed_record = transformer.transform(record, stream_schema, stream_metadata)
+                transformed_record = transformer.transform(
+                    record, stream_schema, stream_metadata)
                 singer.write_record(self.tap_stream_id, transformed_record)
                 counter.increment()
 
@@ -188,12 +199,13 @@ class Conversations(IncrementalStream):
     """
     Get conversations from the Dixa platform.
     """
-    tap_stream_id = 'conversations'
-    key_properties = ['id']
-    replication_key = 'updated_at_datestring'
-    valid_replication_keys = ['updated_at_datestring']
+
+    tap_stream_id = "conversations"
+    key_properties = ["id"]
+    replication_key = "updated_at_datestring"
+    valid_replication_keys = ["updated_at_datestring"]
     base_url = DixaURL.exports.value
-    endpoint = '/v1/conversation_export'
+    endpoint = "/v1/conversation_export"
 
     # pylint: disable=signature-differs
     def get_records(self, start_date, is_parent=False):
@@ -213,7 +225,8 @@ class Conversations(IncrementalStream):
             end = datetime_to_unix_ms(created_before)
 
             params = {'created_before': end, 'created_after': start}
-            response = self.client.get(self.base_url, self.endpoint, params=params)
+            response = self.client.get(
+                self.base_url, self.endpoint, params=params)
 
             if is_parent:
                 # Chunk into max 10 csids to avoid 422 error
@@ -222,7 +235,8 @@ class Conversations(IncrementalStream):
                 yield from chunks(conversation_ids)
             else:
                 for record in response:
-                    record['updated_at_datestring'] = unix_ms_to_date(record['updated_at'])
+                    record['updated_at_datestring'] = unix_ms_to_date(
+                        record['updated_at'])
 
                 yield from response
 
@@ -233,12 +247,13 @@ class Messages(IncrementalStream):
     """
     Get messages from the Dixa platform.
     """
-    tap_stream_id = 'messages'
-    key_properties = ['id']
-    replication_key = 'updated_at_datestring'
-    valid_replication_keys = ['updated_at_datestring']
+
+    tap_stream_id = "messages"
+    key_properties = ["id"]
+    replication_key = "updated_at_datestring"
+    valid_replication_keys = ["updated_at_datestring"]
     base_url = DixaURL.exports.value
-    endpoint = '/v1/message_export'
+    endpoint = "/v1/message_export"
 
     # pylint: disable=signature-differs
     def get_records(self, start_date, is_parent=False):
@@ -257,11 +272,12 @@ class Messages(IncrementalStream):
             start = datetime_to_unix_ms(created_after)
             end = datetime_to_unix_ms(created_before)
 
-            params = {'created_before': end, 'created_after': start}
-            response = self.client.get(self.base_url, self.endpoint, params=params)
+            params = {"created_before": end, "created_after": start}
+            response = self.client.get(
+                self.base_url, self.endpoint, params=params)
 
             for record in response:
-                record['updated_at_datestring'] = unix_ms_to_date(end)
+                record["updated_at_datestring"] = unix_ms_to_date(end)
 
             yield from response
 
@@ -272,13 +288,14 @@ class ActivityLogs(IncrementalStream):
     """
     Get activity logs from the Dixa platform.
     """
-    tap_stream_id = 'activity_logs'
-    key_properties = ['id']
-    replication_key = 'activityTimestamp'
-    valid_replication_keys = ['activityTimestamp']
+
+    tap_stream_id = "activity_logs"
+    key_properties = ["id"]
+    replication_key = "activityTimestamp"
+    valid_replication_keys = ["activityTimestamp"]
     parent = Conversations
     base_url = DixaURL.integrations.value
-    endpoint = '/v1/conversations/activitylog'
+    endpoint = "/v1/conversations/activitylog"
 
     # pylint: disable=signature-differs
     def get_records(self, start_date, is_parent=False):
@@ -289,33 +306,34 @@ class ActivityLogs(IncrementalStream):
         to_datetime = date_to_rfc3339(datetime.datetime.utcnow().isoformat())
 
         params = {
-            'fromDatetime': from_datetime,
-            'toDatetime': to_datetime,
-            'pageKey': page_key,
-            'pageLimit': max_limit
+            "fromDatetime": from_datetime,
+            "toDatetime": to_datetime,
+            "pageKey": page_key,
+            "pageLimit": max_limit,
         }
 
         while loop:
 
-            response = self.client.get(self.base_url, self.endpoint, params=params)
+            response = self.client.get(
+                self.base_url, self.endpoint, params=params)
 
             # Extract data and pageKey
-            data = response.get('data', [])
-            meta = response.get('meta') or {}
-            next_page = meta.get('next')
+            data = response.get("data", [])
+            meta = response.get("meta") or {}
+            next_page = meta.get("next")
             page_key = get_next_page_key(next_page)
 
             # Update params with pageKey
-            params.update({'pageKey': page_key.get('pageKey')})
+            params.update({"pageKey": page_key.get("pageKey")})
 
             # Change switch to exit while loop if pageKey returns None
-            loop = True if page_key.get('pageKey') else False
+            loop = True if page_key.get("pageKey") else False
 
             yield from data
 
 
 STREAMS = {
-    'conversations': Conversations,
-    'messages': Messages,
-    'activity_logs': ActivityLogs,
+    "conversations": Conversations,
+    "messages": Messages,
+    "activity_logs": ActivityLogs,
 }
