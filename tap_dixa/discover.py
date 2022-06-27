@@ -12,7 +12,6 @@ from .helpers import (
     get_abs_path
 )
 
-
 def get_schemas():
     """
     Builds the singer schema and metadata dictionaries.
