@@ -209,38 +209,38 @@ class Conversations(IncrementalStream):
 
     # pylint: disable=signature-differs
     def get_records(self, start_date, is_parent=False):
-        created_after = start_date
+        updated_after = start_date
         end_dt = singer.utils.now()
         add_interval = datetime.timedelta(hours=self.get_interval())
         loop = True
 
         while loop:
-            if (created_after + add_interval) < end_dt:
-                created_before = created_after + add_interval
+            if (updated_after + add_interval) < end_dt:
+                updated_before = updated_after + add_interval
             else:
                 loop = False
-                created_before = end_dt
+                updated_before = end_dt
 
-            start = datetime_to_unix_ms(created_after)
-            end = datetime_to_unix_ms(created_before)
+            start = datetime_to_unix_ms(updated_after)
+            end = datetime_to_unix_ms(updated_before)
 
-            params = {'created_before': end, 'created_after': start}
+            params = {"updated_after": start, "updated_before": end}
             response = self.client.get(
                 self.base_url, self.endpoint, params=params)
 
             if is_parent:
                 # Chunk into max 10 csids to avoid 422 error
                 # on activity logs endpoint
-                conversation_ids = [record['id'] for record in response]
+                conversation_ids = [record["id"] for record in response]
                 yield from chunks(conversation_ids)
             else:
                 for record in response:
-                    record['updated_at_datestring'] = unix_ms_to_date(
-                        record['updated_at'])
+                    record["updated_at_datestring"] = unix_ms_to_date(
+                        record["updated_at"])
 
                 yield from response
 
-            created_after = created_before
+            updated_after = updated_before
 
 
 class Messages(IncrementalStream):
@@ -272,12 +272,13 @@ class Messages(IncrementalStream):
             start = datetime_to_unix_ms(created_after)
             end = datetime_to_unix_ms(created_before)
 
-            params = {"created_before": end, "created_after": start}
+            params = {"created_after": start, "created_before": end}
             response = self.client.get(
                 self.base_url, self.endpoint, params=params)
 
             for record in response:
-                record["updated_at_datestring"] = unix_ms_to_date(record.get('created_at'))
+                record["updated_at_datestring"] = unix_ms_to_date(
+                    record.get('created_at'))
 
             yield from response
 
