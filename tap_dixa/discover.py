@@ -62,6 +62,17 @@ def discover(config: dict):
     schemas, schemas_metadata = get_schemas()
     streams = []
 
+    if config:
+        """
+        Token Validation check before making any api request
+        params : mock parameter values are given for api token validation
+        """
+        Client(config["api_token"]).get(
+            base_url=DixaURL.integrations.value,
+            endpoint=ActivityLogs.endpoint,
+            params={"created_after": datetime.today(), "created_before": datetime.now()},
+        )
+
     for schema_name, schema in schemas.items():
         schema_meta = schemas_metadata[schema_name]
 
