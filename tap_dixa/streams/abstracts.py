@@ -31,7 +31,7 @@ class BaseStream(ABC):
         self.client = client
 
     @abstractmethod
-    def get_records(self, start_date: datetime.datetime = None) -> list:
+    def get_records(self, start_date: datetime.datetime = None, config: dict = {}) -> list:
         """
         Returns a list of records for that stream.
 
