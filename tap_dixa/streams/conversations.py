@@ -20,20 +20,20 @@ class Conversations(IncrementalStream):
 
     # pylint: disable=signature-differs
     def get_records(self, start_date):
-        created_after = start_date
+        updated_after = start_date
         end_dt = singer.utils.now()
         add_interval = datetime.timedelta(hours=self.get_interval())
         loop = True
 
         while loop:
-            if (created_after + add_interval) < end_dt:
-                created_before = created_after + add_interval
+            if (updated_after + add_interval) < end_dt:
+                updated_before = updated_after + add_interval
             else:
                 loop = False
-                created_before = end_dt
+                updated_before = end_dt
 
-            start = datetime_to_unix_ms(created_after)
-            end = datetime_to_unix_ms(created_before)
+            start = datetime_to_unix_ms(updated_after)
+            end = datetime_to_unix_ms(updated_before)
 
             params = {'created_before': end, 'created_after': start}
             response = self.client.get(self.base_url, self.endpoint, params=params)
@@ -42,4 +42,4 @@ class Conversations(IncrementalStream):
 
             yield from response
 
-            created_after = created_before
+            updated_after = updated_before

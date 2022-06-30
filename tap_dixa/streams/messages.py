@@ -39,7 +39,8 @@ class Messages(IncrementalStream):
             response = self.client.get(self.base_url, self.endpoint, params=params)
 
             for record in response:
-                record["updated_at_datestring"] = unix_ms_to_date(end)
+                record["updated_at_datestring"] = unix_ms_to_date(
+                    record.get("created_at"))
 
             yield from response
 
