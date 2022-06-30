@@ -19,7 +19,7 @@ class Messages(IncrementalStream):
     endpoint = "/v1/message_export"
 
     # pylint: disable=signature-differs
-    def get_records(self, start_date):
+    def get_records(self, start_date, config: dict = {}):
         created_after = start_date
         end_dt = singer.utils.now()
         add_interval = datetime.timedelta(hours=self.get_interval())
