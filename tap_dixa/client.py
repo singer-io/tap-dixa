@@ -1,27 +1,18 @@
+""" Module providing DixaAPi Client"""
 import base64
-from enum import Enum
+
 
 import backoff
 import requests
-import datetime
-from singer import get_logger
+
 
 from .exceptions import DixaClient429Error, raise_for_error, retry_after_wait_gen
-
-
-LOGGER = get_logger()
-
-
-class DixaURL(Enum):
-    """
-    Enum representing the Dixa base url API variants.
-    """
-
-    exports = "https://exports.dixa.io"
-    integrations = "https://dev.dixa.io"
+from .helpers import DixaURL
 
 
 class Client:
+    """DixaClient Class for performing extraction from DixaApi"""
+
     def __init__(self, api_token: str):
         self._api_token = api_token
         self._base_url = None
@@ -45,10 +36,10 @@ class Client:
         """
         Sets the corresponding Authorization header based on the base url variant.
         """
-        if self._base_url == DixaURL.exports.value:
+        if self._base_url == DixaURL.EXPORTS.value:
             self._headers["Authorization"] = f"Basic {self._to_base64(self._api_token)}"
 
-        if self._base_url == DixaURL.integrations.value:
+        if self._base_url == DixaURL.INTEGRATIONS.value:
             self._headers["Authorization"] = f"{self._api_token}"
 
     def _build_url(self, endpoint: str) -> str:
@@ -84,9 +75,9 @@ class Client:
         :param data: The data passed to the body of the request
         :return: A dictionary representing the response from the API
         """
-
         with self._session as session:
-            response = session.request(method, url, headers=headers, params=params, data=data)
+            response = session.request(
+                method, url, headers=headers, params=params, data=data)
 
             if response.status_code != 200:
                 raise_for_error(response)

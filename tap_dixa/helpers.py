@@ -1,6 +1,7 @@
 """ helper methods required for tap-dixa"""
 import datetime
 import os
+from enum import Enum
 from typing import Iterator
 from urllib.parse import parse_qsl, urlparse
 
@@ -53,7 +54,7 @@ def chunks(arr, chunk_size=10):
     :return: a chunk sized array
     """
     for i in range(0, len(arr), chunk_size):
-        yield arr[i : i + chunk_size]
+        yield arr[i: i + chunk_size]
 
 
 def date_to_rfc3339(date: str) -> str:
@@ -101,3 +102,23 @@ def _get_replication_key_from_meta(schema_meta):
     if _get_replication_method_from_meta(schema_meta) == "INCREMENTAL":
         return schema_meta[0].get("metadata").get("valid-replication-keys")[0]
     return None
+
+
+class Interval(Enum):
+    """
+    Enum representing time interval for making API calls.
+    """
+
+    HOUR = 1
+    DAY = 24
+    WEEK = 24 * 7
+    MONTH = 24 * 31
+
+
+class DixaURL(Enum):
+    """
+    Enum representing the Dixa base url API variants.
+    """
+
+    EXPORTS = "https://exports.dixa.io"
+    INTEGRATIONS = "https://dev.dixa.io"

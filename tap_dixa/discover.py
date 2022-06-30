@@ -1,16 +1,15 @@
+""" Module providing disovery method of tap-dixa"""
 import json
-from datetime import datetime
 
 from singer import metadata
 from singer.catalog import Catalog
-from tap_dixa.client import Client, DixaURL
-from tap_dixa.streams import STREAMS, ActivityLogs
+from tap_dixa.streams import STREAMS
 
 from .helpers import (
     _get_key_properties_from_meta,
     _get_replication_key_from_meta,
     _get_replication_method_from_meta,
-    get_abs_path,
+    get_abs_path
 )
 
 
