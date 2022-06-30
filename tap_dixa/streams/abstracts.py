@@ -40,8 +40,7 @@ class BaseStream(ABC):
             that is returned for a child stream to consume
         :return: list of records
         """
-        raise NotImplementedError(
-            "Child classes of BaseStream require implementation")
+        raise NotImplementedError("Child classes of BaseStream require implementation")
 
     def set_parameters(self, params: dict) -> None:
         """
@@ -88,8 +87,7 @@ class IncrementalStream(BaseStream):
                     valid_intervals.add(interval)
 
             # pylint: disable=logging-fstring-interpolation
-            LOGGER.critical(
-                f"provided interval '{self.interval}' is not " f"in Interval set: {valid_intervals}")
+            LOGGER.critical(f"provided interval '{self.interval}' is not " f"in Interval set: {valid_intervals}")
 
             raise InvalidInterval("invalid interval provided")
 
@@ -108,17 +106,14 @@ class IncrementalStream(BaseStream):
         """
         if config.get("interval"):
             self.set_interval(config.get("interval"))
-        start_date = singer.get_bookmark(
-            state, self.tap_stream_id, self.replication_key, config["start_date"])
+        start_date = singer.get_bookmark(state, self.tap_stream_id, self.replication_key, config["start_date"])
         bookmark_datetime = singer.utils.strptime_to_utc(start_date)
         max_datetime = bookmark_datetime
 
         with metrics.record_counter(self.tap_stream_id) as counter:
             for record in self.get_records(bookmark_datetime):
-                transformed_record = transformer.transform(
-                    record, stream_schema, stream_metadata)
-                record_datetime = singer.utils.strptime_to_utc(
-                    transformed_record[self.replication_key])
+                transformed_record = transformer.transform(record, stream_schema, stream_metadata)
+                record_datetime = singer.utils.strptime_to_utc(transformed_record[self.replication_key])
                 if record_datetime >= bookmark_datetime:
                     singer.write_record(self.tap_stream_id, transformed_record)
                     counter.increment()
@@ -126,8 +121,7 @@ class IncrementalStream(BaseStream):
 
             bookmark_date = singer.utils.strftime(max_datetime)
 
-        state = singer.write_bookmark(
-            state, self.tap_stream_id, self.replication_key, bookmark_date)
+        state = singer.write_bookmark(state, self.tap_stream_id, self.replication_key, bookmark_date)
         singer.write_state(state)
         return state
 
@@ -155,8 +149,7 @@ class FullTableStream(BaseStream):
         """
         with metrics.record_counter(self.tap_stream_id) as counter:
             for record in self.get_records(config):
-                transformed_record = transformer.transform(
-                    record, stream_schema, stream_metadata)
+                transformed_record = transformer.transform(record, stream_schema, stream_metadata)
                 singer.write_record(self.tap_stream_id, transformed_record)
                 counter.increment()
 
