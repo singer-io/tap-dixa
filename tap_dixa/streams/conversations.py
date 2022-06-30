@@ -44,4 +44,4 @@ class Conversations(IncrementalStream):
 
                 yield from response
 
-            created_after = created_before
+            created_after = created_before + datetime.timedelta(milliseconds=1)
