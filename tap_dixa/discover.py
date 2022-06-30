@@ -1,16 +1,17 @@
 """ Module providing disovery method of tap-dixa"""
 import json
-
 from singer import metadata
 from singer.catalog import Catalog
-from tap_dixa.streams import STREAMS
-
+from .streams import STREAMS, ActivityLogs
+from .client import Client
 from .helpers import (
     _get_key_properties_from_meta,
     _get_replication_key_from_meta,
     _get_replication_method_from_meta,
-    get_abs_path
+    get_abs_path,
+    DixaURL
 )
+from datetime import datetime
 
 def get_schemas():
     """
@@ -67,7 +68,7 @@ def discover(config: dict):
         params : mock parameter values are given for api token validation
         """
         Client(config["api_token"]).get(
-            base_url=DixaURL.integrations.value,
+            base_url=DixaURL.INTEGRATIONS.value,
             endpoint=ActivityLogs.endpoint,
             params={"created_after": datetime.today(), "created_before": datetime.now()},
         )
