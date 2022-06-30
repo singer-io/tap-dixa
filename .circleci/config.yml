@@ -1,19 +1,42 @@
-version: 2.1
-
-executors:
-  docker-executor:
-    docker:
-      - image: 218546966473.dkr.ecr.us-east-1.amazonaws.com/circle-ci:stitch-tap-tester
-
+version: 2
 jobs:
   build:
-    executor: docker-executor
+    docker:
+      - image: 218546966473.dkr.ecr.us-east-1.amazonaws.com/circle-ci:stitch-tap-tester
     steps:
-      - run: echo 'CI done'
-
+      - checkout
+      - run:
+          name: 'Setup virtual env'
+          command: |
+            python3 -mvenv /usr/local/share/virtualenvs/tap-dixa
+            source /usr/local/share/virtualenvs/tap-dixa/bin/activate
+            pip install -U 'pip<19.2' 'setuptools<51.0.0'
+            pip install .[dev]
+      - run:
+          name: 'JSON Validator'
+          command: |
+            source /usr/local/share/virtualenvs/tap-tester/bin/activate
+            stitch-validate-json tap_dixa/schemas/*.json
+      - run:
+          name: 'Pylint'
+          command: |
+            source /usr/local/share/virtualenvs/tap-dixa/bin/activate
+            pip install pylint==2.14.1
+            pylint tap_dixa --disable C,W,R,no-member
 workflows:
   version: 2
   commit:
+    jobs:
+      - build:
+          context: circleci-user
+  build_daily:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
     jobs:
       - build:
           context: circleci-user
