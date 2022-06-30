@@ -75,7 +75,8 @@ class Client:
         :return: A dictionary representing the response from the API
         """
         with self._session as session:
-            response = session.request(method, url, headers=headers, params=params, data=data)
+            response = session.request(
+                method, url, headers=headers, params=params, data=data)
 
             if response.status_code != 200:
                 raise_for_error(response)

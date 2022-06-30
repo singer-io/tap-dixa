@@ -1,5 +1,6 @@
 """ exceptions specific to dixa-client"""
 import requests
+
 from singer import get_logger
 
 LOGGER = get_logger()

@@ -40,6 +40,6 @@ class Conversations(IncrementalStream):
             for record in response:
                 record['updated_at_datestring'] = unix_ms_to_date(record['updated_at'])
 
-                yield from response
+            yield from response
 
             created_after = created_before
