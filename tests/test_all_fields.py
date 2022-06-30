@@ -10,7 +10,7 @@ class DixaAllFields(DixaBaseTest):
     """Ensure running the tap with all streams and fields selected results in the replication of all fields."""
      
     def name(self):
-        return "dixa_all_fields"
+        return "tap_tester_dixa_all_fields_test"
 
     def test_run(self):
         """

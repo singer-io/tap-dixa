@@ -5,8 +5,6 @@ Run discovery for as a prerequisite for most tests
 
 import unittest
 import os
-import pytz
-import dateutil.parser
 
 from datetime import timedelta
 from datetime import datetime as dt
@@ -32,7 +30,6 @@ class DixaBaseTest(unittest.TestCase):
     FULL_TABLE = "FULL_TABLE"
     START_DATE_FORMAT = "%Y-%m-%dT00:00:00Z"
     BOOKMARK_COMPARISON_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
-    # LOGGER = get_logger()
 
     start_date = '2021-10-01T00:00:00Z'
 

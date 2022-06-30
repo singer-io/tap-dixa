@@ -7,10 +7,8 @@ from tap_tester.logger import LOGGER
 class DixaBookMarkTest(DixaBaseTest):
     """Test tap sets a bookmark and respects it for the next sync of a stream"""
 
-    start_date = '2022-04-01T00:00:00Z'
-    
     def name(self):
-        return "dixa_bookmark_test"
+        return "tap_tester_dixa_bookmark_test"
 
     def test_run(self):
         """

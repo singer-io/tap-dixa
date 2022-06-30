@@ -4,17 +4,13 @@ from tap_tester import connections, runner
 from tap_tester.logger import LOGGER
 from base import DixaBaseTest
 
-import debugpy
-debugpy.listen(8000)
-print("Start debugging...")
-debugpy.wait_for_client()
 
 class DixaStartDateTest(DixaBaseTest):
     start_date = "2022-06-22T00:00:00Z"
 
     @staticmethod
     def name():
-        return "dixa_start_date_test"
+        return "tap_tester_dixa_start_date_test"
 
 
     def test_run(self):
