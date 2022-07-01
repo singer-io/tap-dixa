@@ -33,15 +33,18 @@ def get_schemas():
             replication_keys = None
 
         meta = metadata.get_standard_metadata(schema=schema,
-                                            key_properties=stream_object.key_properties,
-                                            replication_method=stream_object.replication_method,
-                                            valid_replication_keys=replication_keys,)
+                                              key_properties=stream_object.key_properties,
+                                              replication_method=stream_object.replication_method,
+                                              valid_replication_keys=replication_keys,)
 
         meta = metadata.to_map(meta)
 
         if replication_keys:
             for replication_key in replication_keys:
-                meta = metadata.write(meta, ("properties", replication_key), "inclusion", "automatic")
+                meta = metadata.write(meta,
+                                      ("properties", replication_key),
+                                      "inclusion",
+                                      "automatic")
 
         meta = metadata.to_list(meta)
 

@@ -38,8 +38,7 @@ class Client:
         """
         if self._base_url == DixaURL.EXPORTS.value:
             self._headers["Authorization"] = f"Basic {self._to_base64(self._api_token)}"
-
-        if self._base_url == DixaURL.INTEGRATIONS.value:
+        elif self._base_url == DixaURL.INTEGRATIONS.value:
             self._headers["Authorization"] = f"{self._api_token}"
 
     def _build_url(self, endpoint: str) -> str:
