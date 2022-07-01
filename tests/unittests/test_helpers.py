@@ -1,5 +1,5 @@
 import datetime
-
+import unittest
 from tap_dixa import helpers
 
 
@@ -16,9 +16,9 @@ def test_unix_ms_to_date():
 
 def test_datetime_to_unix_ms():
     test_cases = [
-        {"case": datetime.datetime(2021, 8, 16, 23, 29, 10, 735719), "expected": 1629181750735},
-        {"case": datetime.datetime(1965, 5, 25, 21, 29, 10, 123456), "expected": -145222249876},
-        {"case": datetime.datetime(2015, 9, 8, 18, 21, 12, 555555), "expected": 1441761672555},
+        {"case": datetime.datetime(2021, 8, 16, 23, 29, 10, 735719), "expected": 1629136750735},
+        {"case": datetime.datetime(1965, 5, 25, 21, 29, 10, 123456), "expected": -145267249876},
+        {"case": datetime.datetime(2015, 9, 8, 18, 21, 12, 555555), "expected": 1441716672555},
     ]
 
     for case in test_cases:
@@ -58,3 +58,101 @@ def test_get_next_page_key():
 
     for case in test_cases:
         assert case["expected"] == helpers.get_next_page_key(case["case"])
+
+
+class TestGetReplicationMethodFromMeta(unittest.TestCase):
+    """
+    class to test retrieving data from meta for a given stream
+    """
+    positive_test_cases = [
+        {"case": [{"metadata": {"forced-replication-method": "INCREMENTAL"}}], "expected": "INCREMENTAL"},
+        {"case": [{"metadata": {"forced-replication-method": "FULL TABLE"}}], "expected": "FULL TABLE"}
+        ]
+    negative_test_cases = [
+        {"case": []},
+        {"case": {}},
+        {"case": [{"metadata": {"replication-method": "INCREMENTAL"}}]},
+        {"case": [{"metadata1": {"forced-replication-method": "INCREMENTAL"}}]}
+    ]
+
+    def test_positive_scenarios(self):
+        """
+        fn covers unittests for all the positive scenarios
+        """
+        for case in self.positive_test_cases:
+            self.assertEquals(case["expected"], helpers._get_replication_method_from_meta(case["case"]))
+
+    def test_negative_scenarios(self):
+        """
+        fn covers unittests for all the negative scenarios
+        """
+        with self.assertRaises((KeyError, IndexError)):
+            for case in self.negative_test_cases:
+                helpers._get_replication_method_from_meta(case["case"])
+
+
+class TestGetReplicationKeyFromMeta(unittest.TestCase):
+    """
+    class to test retrieving data from meta for a given stream
+    """
+    positive_test_cases = [
+        {"case": [{"metadata": {"valid-replication-keys": ["ID"]}}], "expected": None},
+        {"case": [{"metadata": {"forced-replication-method": "INCREMENTAL", "valid-replication-keys": ["UPDATED_AT"]}}],
+         "expected": "UPDATED_AT"}
+        ]
+    negative_test_cases = [
+        {"case": []},
+        {"case": [{"metadata": {"valid-replication-keys": {"UPDATED_AT"}}}]},
+        {"case": [{"metadata": {"replication-keys": "ID"}}]},
+        {"case": [{"metadata1": {"valid-replication-keys": "ID"}}]}
+    ]
+
+    def test_positive_scenarios(self):
+        """
+        fn covers unittests for all the positive scenarios
+        """
+        for case in self.positive_test_cases:
+            self.assertEquals(case["expected"], helpers._get_replication_key_from_meta(case["case"]))
+
+    def test_negative_scenarios(self):
+        """
+        fn covers unittests for all the negative scenarios
+        """
+        with self.assertRaises((KeyError, IndexError)):
+            for case in self.negative_test_cases:
+                helpers._get_replication_key_from_meta(case['case'])
+
+
+class TestGetKeyPropertiesFromMeta(unittest.TestCase):
+    """
+    class to test retrieving data from meta for a given stream
+    """
+    positive_test_cases = [
+        {"case": [{"metadata": {"table-key-properties": ["ID"]}}], "expected": ["ID"]},
+        {"case": [{"metadata": {"table-key-properties": ["ID", "UPDATED_AT"]}}], "expected": ["ID", "UPDATED_AT"]}
+        ]
+    negative_test_cases = [
+        {"case": []},
+        {"case": {}},
+        {"case": [{"metadata": {"key-properties": ["ID"]}}]},
+        {"case": [{"metadata1": {"table-key-properties": ["ID"]}}]}
+    ]
+
+    def test_positive_scenarios(self):
+        """
+        fn covers unittests for all the positive scenarios
+        """
+        for case in self.positive_test_cases:
+            self.assertEquals(case["expected"], helpers._get_key_properties_from_meta(case["case"]))
+
+    def test_negative_scenarios(self):
+        """
+        fn covers unittests for all the negative scenarios
+        """
+        with self.assertRaises((KeyError, IndexError)):
+            for case in self.negative_test_cases:
+                helpers._get_key_properties_from_meta(case["case"])
+
+
+
+

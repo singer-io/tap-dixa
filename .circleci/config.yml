@@ -23,6 +23,13 @@ jobs:
             source /usr/local/share/virtualenvs/tap-dixa/bin/activate
             pip install pylint==2.14.1
             pylint tap_dixa --disable C,W,R,no-member
+      - run:
+          name: 'Unit Tests'
+          command: |
+            source /usr/local/share/virtualenvs/tap-dixa/bin/activate
+            pip install coverage
+            nosetests --with-coverage --cover-erase --cover-package=tap_dixa --cover-html-dir=htmlcov tests/unittests
+            coverage html
 workflows:
   version: 2
   commit:
