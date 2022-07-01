@@ -32,6 +32,7 @@ class DixaBaseTest(unittest.TestCase):
     BOOKMARK_COMPARISON_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
     start_date = '2021-10-01T00:00:00Z'
+    page_size = 10
 
     @staticmethod
     def tap_name():
@@ -46,7 +47,8 @@ class DixaBaseTest(unittest.TestCase):
     def get_properties(self, original: bool = True):
         """Configuration properties required for the tap."""
         return_value = {
-            'start_date' : self.start_date
+            'start_date' : self.start_date,
+            'page_size' : 10
         }
         if original:
             return return_value

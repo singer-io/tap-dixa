@@ -16,9 +16,8 @@ class DixaPaginationTest(DixaBaseTest):
         """Configuration properties required for the tap."""
         return_value = {
             'start_date' : self.start_date,
-            'page_size': 10
+            'page_size' : 10
         }
-
         if original:
             return return_value
 
@@ -26,17 +25,11 @@ class DixaPaginationTest(DixaBaseTest):
         return return_value
 
     def test_run(self):
-        page_size = 250
+        page_size = int(self.get_properties().get('page_size', self.page_size))
         conn_id = connections.ensure_connection(self)
 
         # Checking pagination for streams with enough data
-        expected_streams = [
-            "addresses",
-            "customers",
-            "discounts",
-            "metafields_subscription",
-            "onetimes",
-            ]
+        expected_streams = ["activity_logs"]
         found_catalogs = self.run_and_verify_check_mode(conn_id)
 
         # table and field selection
