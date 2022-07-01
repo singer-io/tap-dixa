@@ -25,6 +25,13 @@ setup(
         "six==1.16.0",
         "urllib3==1.26.6",
     ],
+    extras_require={
+          'dev': [
+              'pylint',
+              'nose',
+              'ipdb'
+          ]
+      },
     entry_points="""
     [console_scripts]
     tap-dixa=tap_dixa:main
