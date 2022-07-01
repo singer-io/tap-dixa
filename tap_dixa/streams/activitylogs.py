@@ -33,8 +33,7 @@ class ActivityLogs(IncrementalStream):
 
         while loop:
 
-            response = self.client.get(
-                self.base_url, self.endpoint, params=params)
+            response = self.client.get(self.base_url, self.endpoint, params=params)
 
             # Extract data and pageKey
             data = response.get("data", [])

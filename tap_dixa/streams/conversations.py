@@ -36,11 +36,9 @@ class Conversations(IncrementalStream):
             end = datetime_to_unix_ms(created_before)
 
             params = {'created_before': end, 'created_after': start}
-            response = self.client.get(
-                self.base_url, self.endpoint, params=params)
+            response = self.client.get(self.base_url, self.endpoint, params=params)
             for record in response:
-                record['updated_at_datestring'] = unix_ms_to_date(
-                    record['updated_at'])
+                record['updated_at_datestring'] = unix_ms_to_date(record['updated_at'])
 
                 yield from response
 
