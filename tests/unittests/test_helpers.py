@@ -11,6 +11,7 @@ def test_unix_ms_to_date():
     ]
 
     for case in test_cases:
+        print(helpers.unix_ms_to_date(case["case"]))
         assert case["expected"] == helpers.unix_ms_to_date(case["case"])
 
 
@@ -22,6 +23,7 @@ def test_datetime_to_unix_ms():
     ]
 
     for case in test_cases:
+        print(helpers.datetime_to_unix_ms(case["case"]))
         assert case["expected"] == helpers.datetime_to_unix_ms(case["case"])
 
 
