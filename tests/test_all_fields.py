@@ -1,11 +1,6 @@
 from tap_tester import connections, runner, menagerie
 from base import DixaBaseTest
 
-import debugpy
-debugpy.listen(8000)
-print("Start debugging...")
-debugpy.wait_for_client()
-
 class DixaAllFields(DixaBaseTest):
     """Ensure running the tap with all streams and fields selected results in the replication of all fields."""
      
