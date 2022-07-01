@@ -31,7 +31,7 @@ class BaseStream(ABC):
         self.client = client
 
     @abstractmethod
-    def get_records(self, start_date: datetime.datetime = None) -> list:
+    def get_records(self, start_date: datetime.datetime = None, config: dict = {}) -> list:
         """
         Returns a list of records for that stream.
 
@@ -111,9 +111,11 @@ class IncrementalStream(BaseStream):
         max_datetime = bookmark_datetime
 
         with metrics.record_counter(self.tap_stream_id) as counter:
-            for record in self.get_records(bookmark_datetime):
-                transformed_record = transformer.transform(record, stream_schema, stream_metadata)
-                record_datetime = singer.utils.strptime_to_utc(transformed_record[self.replication_key])
+            for record in self.get_records(bookmark_datetime, config = config):
+                transformed_record = transformer.transform(
+                    record, stream_schema, stream_metadata)
+                record_datetime = singer.utils.strptime_to_utc(
+                    transformed_record[self.replication_key])
                 if record_datetime >= bookmark_datetime:
                     singer.write_record(self.tap_stream_id, transformed_record)
                     counter.increment()
