@@ -1,6 +1,8 @@
 """ helper methods required for tap-dixa"""
 import datetime
 import os
+import pytz
+
 from enum import Enum
 from typing import Iterator
 from urllib.parse import parse_qsl, urlparse
@@ -19,6 +21,15 @@ def unix_ms_to_date(timestamp_ms: int) -> str:
     """
     return datetime.datetime.fromtimestamp(timestamp_ms / 1000).replace(microsecond=0).isoformat()
 
+
+def unix_ms_to_date_utc(timestamp_ms: int) -> datetime.datetime:
+    """
+    Converts unix timestamp in milliseconds to timezone aware datetime object.
+
+    :param timestamp_ms: unix timestamp in milliseconds
+    :return: datetime obj
+    """
+    return datetime.datetime.fromtimestamp(timestamp_ms / 1000).replace(microsecond=0).replace(tzinfo=pytz.UTC)
 
 def datetime_to_unix_ms(datetime_obj: datetime.datetime) -> int:
     """
