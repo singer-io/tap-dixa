@@ -2,7 +2,7 @@ import datetime
 
 import singer
 
-from ..helpers import datetime_to_unix_ms, unix_ms_to_date, DixaURL
+from ..helpers import datetime_to_unix_ms,unix_ms_to_date_utc, DixaURL
 from .abstracts import IncrementalStream
 
 
@@ -13,38 +13,27 @@ class Messages(IncrementalStream):
 
     tap_stream_id = "messages"
     key_properties = ["id"]
-    replication_key = "updated_at_datestring"
-    valid_replication_keys = ["updated_at_datestring"]
+    replication_key = "created_at"
+    valid_replication_keys = ["created_at"]
+    old_replication_key = "updated_at_datestring"
     base_url = DixaURL.EXPORTS.value
     endpoint = "/v1/message_export"
 
     # pylint: disable=signature-differs
-    def get_records(self, start_date, config: dict = {}):
-        created_after = start_date
-        end_dt = singer.utils.now()
+    def get_records(self, start_date :int, config: dict = {}):
         add_interval = datetime.timedelta(hours=self.get_interval())
-        loop = True
+        created_after = unix_ms_to_date_utc(start_date)
+        end_dt,loop = singer.utils.now(),True
+
 
         while loop:
             if (created_after + add_interval) < end_dt:
                 created_before = created_after + add_interval
             else:
-                loop = False
-                created_before = end_dt
+                created_before,loop = end_dt,False
 
-            start = datetime_to_unix_ms(created_after)
-            end = datetime_to_unix_ms(created_before)
-
-            params = {
-                "created_after": start,
-                "created_before": end,
-            }
-            response = self.client.get(
-                self.base_url, self.endpoint, params=params)
-
-            for record in response:
-                record["updated_at_datestring"] = unix_ms_to_date(
-                    record.get("created_at"))
+            params = {"created_after": datetime_to_unix_ms(created_after),"created_before": datetime_to_unix_ms(created_before)}
+            response = self.client.get(self.base_url, self.endpoint, params=params)
 
             yield from response
 
