@@ -35,10 +35,7 @@ class Messages(IncrementalStream):
             start = datetime_to_unix_ms(created_after)
             end = datetime_to_unix_ms(created_before)
 
-            params = {
-                "created_after": start,
-                "created_before": end,
-            }
+            params = {"created_after": start,"created_before": end}
             response = self.client.get(self.base_url, self.endpoint, params=params)
 
             for record in response:
