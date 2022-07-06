@@ -21,7 +21,7 @@ class Conversations(IncrementalStream):
 
 
     # pylint: disable=signature-differs
-    def get_records(self, start_date :int, config: dict = {}):
+    def get_records(self, start_date :int):
         add_interval = datetime.timedelta(hours=self.get_interval())
         updated_after = unix_ms_to_date_utc(start_date)
         end_dt,loop = singer.utils.now(),True
