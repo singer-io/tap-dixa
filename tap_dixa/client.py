@@ -6,7 +6,7 @@ import backoff
 import requests
 
 
-from .exceptions import DixaClient429Error, raise_for_error, retry_after_wait_gen
+from .exceptions import DixaClient429Error,DixaClient400Error, raise_for_error, retry_after_wait_gen
 from .helpers import DixaURL
 
 
@@ -62,6 +62,8 @@ class Client:
         """
         return self._make_request(url, method="POST", headers=headers, params=params, data=data)
 
+    # Added retry logic for 3 times when bad request happens
+    @backoff.on_exception(retry_after_wait_gen, DixaClient400Error, jitter=None, max_tries=3)
     @backoff.on_exception(retry_after_wait_gen, DixaClient429Error, jitter=None, max_tries=3)
     def _make_request(self, url, method, headers=None, params=None, data=None) -> dict:
         """
