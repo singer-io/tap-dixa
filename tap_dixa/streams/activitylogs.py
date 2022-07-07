@@ -1,7 +1,7 @@
 import datetime
 
-from ..helpers import date_to_rfc3339, get_next_page_key, DixaURL
-from .abstracts import IncrementalStream
+from tap_dixa.helpers import date_to_rfc3339, get_next_page_key, DixaURL
+from tap_dixa.streams.abstracts import IncrementalStream
 
 
 class ActivityLogs(IncrementalStream):
@@ -17,8 +17,8 @@ class ActivityLogs(IncrementalStream):
     endpoint = "/v1/conversations/activitylog"
 
     # pylint: disable=signature-differs
-    def get_records(self, start_date):
-        max_limit = 10_000
+    def get_records(self, start_date, config: dict = {}):
+        max_limit = config.get("page_size", 10_000)
         loop = True
         page_key = None
         from_datetime = date_to_rfc3339(start_date.isoformat())

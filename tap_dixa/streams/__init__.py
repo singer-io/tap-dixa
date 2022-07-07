@@ -1,6 +1,6 @@
-from .activitylogs import ActivityLogs
-from .conversations import Conversations
-from .messages import Messages
+from tap_dixa.streams.activitylogs import ActivityLogs
+from tap_dixa.streams.conversations import Conversations
+from tap_dixa.streams.messages import Messages
 
 STREAMS = {
     "activity_logs": ActivityLogs,
