@@ -11,7 +11,7 @@ class test_increemtalstream(unittest.TestCase):
     """
     def test_invalid_value_of_interval(self):
         try :
-            config = {'interval': "MONTHH"}
+            config = {'interval': "INVALID"}
             IncrementalStream.set_interval(self,value=config['interval'])
             response = IncrementalStream.get_interval(self)
         except InvalidInterval as e :

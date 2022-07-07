@@ -7,11 +7,7 @@ from enum import Enum
 from typing import Iterator
 from urllib.parse import parse_qsl, urlparse
 
-from singer import get_logger, utils
-
-LOGGER = get_logger()
-
-LOGGER = get_logger()
+from singer import  utils
 
 def unix_ms_to_date(timestamp_ms: int) -> str:
     """

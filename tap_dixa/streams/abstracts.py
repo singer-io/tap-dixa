@@ -125,8 +125,7 @@ class IncrementalStream(BaseStream):
 
         with singer.metrics.record_counter(self.tap_stream_id) as counter:
             for record in self.get_records(bookmark_datetime):
-                transformed_record = transformer.transform(
-                    record, stream_schema, stream_metadata)
+                transformed_record = transformer.transform(record, stream_schema, stream_metadata)
                 record_datetime = transformed_record[self.replication_key]
                 if record_datetime >= bookmark_datetime:
                     singer.write_record(self.tap_stream_id, transformed_record)
