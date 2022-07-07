@@ -5,10 +5,8 @@ import base64
 import backoff
 import requests
 
-
-from .exceptions import DixaClient429Error,DixaClient400Error, raise_for_error, retry_after_wait_gen
-from .helpers import DixaURL
-
+from tap_dixa.exceptions import DixaClient429Error,DixaClient400Error, raise_for_error, retry_after_wait_gen
+from tap_dixa.helpers import DixaURL
 
 class Client:
     """DixaClient Class for performing extraction from DixaApi"""

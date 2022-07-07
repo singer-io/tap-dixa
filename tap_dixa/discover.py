@@ -2,9 +2,9 @@
 import json
 from singer import metadata
 from singer.catalog import Catalog
-from .streams import STREAMS, ActivityLogs
-from .client import Client
-from .helpers import (
+from tap_dixa.streams import STREAMS, ActivityLogs
+from tap_dixa.client import Client
+from tap_dixa.helpers import (
     _get_key_properties_from_meta,
     _get_replication_key_from_meta,
     _get_replication_method_from_meta,

@@ -2,8 +2,8 @@ import datetime
 
 import singer
 
-from ..helpers import datetime_to_unix_ms, unix_ms_to_date, DixaURL
-from .abstracts import IncrementalStream
+from tap_dixa.helpers import datetime_to_unix_ms, unix_ms_to_date, DixaURL
+from tap_dixa.streams.abstracts import IncrementalStream
 
 
 class Conversations(IncrementalStream):

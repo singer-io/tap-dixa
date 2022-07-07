@@ -1,7 +1,7 @@
 import datetime
 
-from ..helpers import date_to_rfc3339, get_next_page_key, DixaURL
-from .abstracts import IncrementalStream
+from tap_dixa.helpers import date_to_rfc3339, get_next_page_key, DixaURL
+from tap_dixa.streams.abstracts import IncrementalStream
 
 
 class ActivityLogs(IncrementalStream):
