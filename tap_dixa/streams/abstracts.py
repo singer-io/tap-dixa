@@ -2,10 +2,9 @@ import datetime
 from abc import ABC, abstractmethod
 
 import singer
-
-from ..client import Client
-from ..exceptions import InvalidInterval
-from ..helpers import Interval,datetime_to_unix_ms
+from tap_dixa.client import Client
+from tap_dixa.exceptions import InvalidInterval
+from tap_dixa.helpers import Interval,datetime_to_unix_ms
 
 LOGGER = singer.get_logger()
 

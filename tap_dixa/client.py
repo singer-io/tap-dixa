@@ -1,14 +1,11 @@
 """ Module providing DixaAPi Client"""
 import base64
-
-
 import backoff
 import requests
 
-
-from .exceptions import DixaClient429Error, raise_for_error, retry_after_wait_gen
-from .helpers import DixaURL
-
+from tap_dixa.exceptions import (DixaClient429Error,DixaClient400Error, 
+                                 raise_for_error, retry_after_wait_gen)
+from tap_dixa.helpers import DixaURL
 
 class Client:
     """DixaClient Class for performing extraction from DixaApi"""
@@ -38,8 +35,7 @@ class Client:
         """
         if self._base_url == DixaURL.EXPORTS.value:
             self._headers["Authorization"] = f"Basic {self._to_base64(self._api_token)}"
-
-        if self._base_url == DixaURL.INTEGRATIONS.value:
+        elif self._base_url == DixaURL.INTEGRATIONS.value:
             self._headers["Authorization"] = f"{self._api_token}"
 
     def _build_url(self, endpoint: str) -> str:
@@ -63,6 +59,8 @@ class Client:
         """
         return self._make_request(url, method="POST", headers=headers, params=params, data=data)
 
+    # Added retry logic for 3 times when bad request happens
+    @backoff.on_exception(retry_after_wait_gen, DixaClient400Error, jitter=None, max_tries=3)
     @backoff.on_exception(retry_after_wait_gen, DixaClient429Error, jitter=None, max_tries=3)
     def _make_request(self, url, method, headers=None, params=None, data=None) -> dict:
         """

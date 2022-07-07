@@ -11,6 +11,7 @@ from singer import get_logger, utils
 
 LOGGER = get_logger()
 
+LOGGER = get_logger()
 
 def unix_ms_to_date(timestamp_ms: int) -> str:
     """

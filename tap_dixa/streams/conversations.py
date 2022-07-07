@@ -2,7 +2,7 @@ import datetime
 
 
 import singer
-from ..helpers import datetime_to_unix_ms,unix_ms_to_date_utc,DixaURL
+from tap_dixa.helpers import datetime_to_unix_ms,unix_ms_to_date_utc,DixaURL
 from .abstracts import IncrementalStream
 
 

@@ -1,6 +1,6 @@
 import datetime
 
-from ..helpers import date_to_rfc3339, get_next_page_key, DixaURL
+from tap_dixa.helpers import date_to_rfc3339, get_next_page_key, DixaURL
 from .abstracts import IncrementalStream
 import singer
 from singer import metrics, Transformer
@@ -71,8 +71,7 @@ class ActivityLogs(IncrementalStream):
 
         while loop:
 
-            response = self.client.get(
-                self.base_url, self.endpoint, params=params)
+            response = self.client.get(self.base_url, self.endpoint, params=params)
 
             # Extract data and pageKey
             data = response.get("data", [])

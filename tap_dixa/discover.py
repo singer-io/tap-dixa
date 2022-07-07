@@ -2,9 +2,9 @@
 import json
 from singer import metadata
 from singer.catalog import Catalog
-from .streams import STREAMS, ActivityLogs
-from .client import Client
-from .helpers import (
+from tap_dixa.streams import STREAMS, ActivityLogs
+from tap_dixa.client import Client
+from tap_dixa.helpers import (
     _get_key_properties_from_meta,
     _get_replication_key_from_meta,
     _get_replication_method_from_meta,
@@ -12,7 +12,6 @@ from .helpers import (
     DixaURL
 )
 from datetime import datetime
-
 
 def get_schemas():
     """
@@ -34,15 +33,18 @@ def get_schemas():
             replication_keys = None
 
         meta = metadata.get_standard_metadata(schema=schema,
-                                            key_properties=stream_object.key_properties,
-                                            replication_method=stream_object.replication_method,
-                                            valid_replication_keys=replication_keys,)
+                                              key_properties=stream_object.key_properties,
+                                              replication_method=stream_object.replication_method,
+                                              valid_replication_keys=replication_keys,)
 
         meta = metadata.to_map(meta)
 
         if replication_keys:
             for replication_key in replication_keys:
-                meta = metadata.write(meta, ("properties", replication_key), "inclusion", "automatic")
+                meta = metadata.write(meta,
+                                      ("properties", replication_key),
+                                      "inclusion",
+                                      "automatic")
 
         meta = metadata.to_list(meta)
 
@@ -61,15 +63,12 @@ def discover(config: dict):
     streams = []
 
     if config:
-        """
-        Token Validation check before making any api request
-        params : mock parameter values are given for api token validation
-        """
-        Client(config["api_token"]).get(
-            base_url=DixaURL.INTEGRATIONS.value,
-            endpoint=ActivityLogs.endpoint,
-            params={"created_after": datetime.today(), "created_before": datetime.now()},
-        )
+        #Token Validation check before making any api request
+        #params : mock parameter values are given for api token validation
+        Client(config["api_token"]).get(base_url=DixaURL.INTEGRATIONS.value,
+                                        endpoint=ActivityLogs.endpoint,
+                                        params={"created_after": datetime.today(),
+                                        "created_before": datetime.now()})
 
     for schema_name, schema in schemas.items():
         schema_meta = schemas_metadata[schema_name]
