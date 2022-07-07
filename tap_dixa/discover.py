@@ -63,10 +63,8 @@ def discover(config: dict):
     streams = []
 
     if config:
-        """
-        Token Validation check before making any api request
-        params : mock parameter values are given for api token validation
-        """
+        #Token Validation check before making any api request
+        #params : mock parameter values are given for api token validation
         Client(config["api_token"]).get(base_url=DixaURL.INTEGRATIONS.value,
                                         endpoint=ActivityLogs.endpoint,
                                         params={"created_after": datetime.today(),
