@@ -9,7 +9,7 @@ LOGGER = singer.get_logger()
 def sync(config, state, catalog):
     """Sync data from tap source"""
 
-    client = Client(config.get("api_token"))
+    client = Client(config)
 
     with Transformer() as transformer:
         for stream in catalog.get_selected_streams(state):
@@ -25,7 +25,7 @@ def sync(config, state, catalog):
 
             singer.write_schema(tap_stream_id, stream_schema, stream_obj.key_properties, stream.replication_key)
 
-            state = stream_obj.sync(state, stream_schema, stream_metadata, config, transformer)
+            state = stream_obj.sync(state, stream_schema, stream_metadata,transformer)
             singer.write_state(state)
 
     state = singer.set_currently_syncing(state, None)

@@ -18,7 +18,7 @@ class ActivityLogs(IncrementalStream):
     base_url = DixaURL.INTEGRATIONS.value
     endpoint = "/v1/conversations/activitylog"
 
-    def sync(self, state: dict, stream_schema: dict, stream_metadata: dict, config: dict, transformer: Transformer) -> dict:
+    def sync(self, state: dict, stream_schema: dict, stream_metadata: dict,transformer: Transformer) -> dict:
         """
         The sync logic for an incremental stream.
 
@@ -29,15 +29,15 @@ class ActivityLogs(IncrementalStream):
         :param transformer: A singer Transformer object
         :return: State data in the form of a dictionary
         """
-        if config.get("interval"):
-            self.set_interval(config.get("interval"))
+        if self.client.config.get("interval"):
+            self.set_interval(self.client.config.get("interval"))
         start_date = singer.get_bookmark(
             state, self.tap_stream_id, self.replication_key, config["start_date"])
         bookmark_datetime = singer.utils.strptime_to_utc(start_date)
         max_datetime = bookmark_datetime
 
         with metrics.record_counter(self.tap_stream_id) as counter:
-            for record in self.get_records(bookmark_datetime, config=config):
+            for record in self.get_records(bookmark_datetime):
                 transformed_record = transformer.transform(
                     record, stream_schema, stream_metadata)
                 record_datetime = singer.utils.strptime_to_utc(
@@ -55,8 +55,8 @@ class ActivityLogs(IncrementalStream):
         return state
 
     # pylint: disable=signature-differs
-    def get_records(self, start_date, config: dict = {}):
-        max_limit = config.get("page_size", 10_000)
+    def get_records(self, start_date,):
+        max_limit = self.client.config.get("page_size", 10_000)
         loop = True
         page_key = None
         from_datetime = date_to_rfc3339(start_date.isoformat())
