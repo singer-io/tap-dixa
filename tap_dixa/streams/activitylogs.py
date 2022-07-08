@@ -32,7 +32,7 @@ class ActivityLogs(IncrementalStream):
         if self.client.config.get("interval"):
             self.set_interval(self.client.config.get("interval"))
         start_date = singer.get_bookmark(
-            state, self.tap_stream_id, self.replication_key, config["start_date"])
+            state, self.tap_stream_id, self.replication_key, self.client.config["start_date"])
         bookmark_datetime = singer.utils.strptime_to_utc(start_date)
         max_datetime = bookmark_datetime
 
