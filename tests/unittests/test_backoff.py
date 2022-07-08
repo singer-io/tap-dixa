@@ -1,9 +1,10 @@
 from unittest.mock import patch
 import unittest
 import requests
+from datetime import datetime
 
 from tap_dixa.client import Client, DixaClient429Error
-from tap_dixa.exceptions import DixaClient400Error, DixaClient422Error
+from tap_dixa.exceptions import DixaClient5xxError
 
 
 class Mockresponse:
@@ -23,18 +24,57 @@ class Mockresponse:
 def mocked_failed_429_request(*args, **kwargs):
     return Mockresponse('', 429, headers={}, raise_error=True)
 
-@patch("time.sleep")
-@patch("requests.Session.request", side_effect=mocked_failed_429_request)
-class Test_Client(unittest.TestCase):
+class Test_backoff(unittest.TestCase):
 
+    @patch("time.sleep")
+    @patch("requests.Session.request", side_effect=mocked_failed_429_request)
     def test_too_many_requests_429_error(self, mocked_send, mocked_sleep):
         client = Client(api_token="test")
 
         try:
-            # Verifying if the custom exception 'DixaClient429Error' is raised on receiving status code 429
+            """
+            Verifying if the custom exception 'DixaClient429Error' 
+            is raised on receiving status code 429
+            """
             _ = client.get("https://test.com", "/test")
-        except DixaClient429Error: #as api_error:
+        except DixaClient429Error as api_error:
             pass
 
-            # Verifying the retry is happening thrice for the 429 exception
+            """
+            Verifying the retry is happening thrice for the 429 exception
+            """
+        self.assertEquals(mocked_send.call_count, 3)
+
+    @patch("requests.Session.request", side_effect=mocked_failed_429_request)
+    def test_request_timeout_and_backoff(self, mock_send):
+        """
+        Check whether the request backoffs properly for get call for more than a minute for Server429Error.
+        """
+        mock_send.side_effect = DixaClient429Error
+        client = Client(api_token="test")
+        before_time = datetime.now()
+        with self.assertRaises(DixaClient429Error):
+            _ = client.get("https://test.com", "/test")
+        after_time = datetime.now()
+        # verify that the tap backoff for more than 60 seconds
+        time_difference = (after_time - before_time).total_seconds()
+        self.assertTrue(60 <= time_difference <= 121)
+        
+    @patch("time.sleep")
+    @patch("requests.Session.request", side_effect= lambda *args, **kwargs : Mockresponse('', 500, headers={}, raise_error=True))
+    def test_500_server_error(self, mocked_send, mocked_sleep):
+        client = Client(api_token="test")
+
+        try:
+            """
+            Verifying if the custom exception 'DixaClient5xxError' 
+            is raised on receiving status code 500
+            """
+            _ = client.get("https://test.com", "/test")
+        except DixaClient5xxError as api_error:
+            pass
+
+            """
+            Verifying the retry is happening thrice for the 500 server error exception
+            """
         self.assertEquals(mocked_send.call_count, 3)
