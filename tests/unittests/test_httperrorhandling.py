@@ -58,11 +58,11 @@ class HTTPErrorCodeHandling(TestCase):
         """
         Unit test to check proper error message for 401 status code.
         """
-        with self.assertRaises(exceptions.DixaClient401Error):
+        with self.assertRaises(exceptions.DixaClient408Error):
             try:
                 self.client_obj.get("https://test.com", "/test")
             except exceptions.DixaClientError as _:
-                self.assertEqual(str(_), "Invalid or missing credentials")
+                self.assertEqual(str(_), "Request Timeout")
                 raise _
 
     @mock.patch("requests.Session.request", side_effect=lambda *_, **__: Mockresponse("", 422))

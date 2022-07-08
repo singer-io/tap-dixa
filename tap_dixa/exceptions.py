@@ -17,9 +17,6 @@ class DixaClientError(Exception):
         self.response = response
 
 
-class DixaClient5xxError(DixaClientError):
-    pass
-
 class DixaClient400Error(DixaClientError):
     pass
 
@@ -36,11 +33,13 @@ class DixaClient429Error(DixaClientError):
 class DixaClient422Error(DixaClientError):
     pass
 
+class DixaClient5xxError(DixaClientError):
+    pass
 
 ERROR_CODE_EXCEPTION_MAPPING = {
     400: {"raise_exception": DixaClient400Error, "message": "Invalid query parameters"},
     401: {"raise_exception": DixaClient401Error, "message": "Invalid or missing credentials"},
-    408: {"raise_exception": DixaClient408Error, "message": "Invalid or missing credentials"},
+    408: {"raise_exception": DixaClient408Error, "message": "Request Timeout"},
     422: {"raise_exception": DixaClient422Error, "message": "Exceeded max allowed 10 csids per request"},
     429: {"raise_exception": DixaClient429Error, "message": "API limit has been reached"},
     500: {"raise_exception": DixaClient5xxError,"message": "Dixa Server Error",},
