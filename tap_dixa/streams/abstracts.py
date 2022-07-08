@@ -69,11 +69,10 @@ class IncrementalStream(BaseStream):
         :param config: A dictionary containing tap config data
         :return: epoch timestamp in the form of a int datatype
         """
-        config = self.client.config
         bookmark = singer.get_bookmark(state, self.tap_stream_id, self.replication_key, False)
         if not bookmark:
             # get previous bookmark value if the current dosent exists or default to start date
-            _ = singer.get_bookmark(state, self.tap_stream_id,self.old_replication_key, config["start_date"])  
+            _ = singer.get_bookmark(state, self.tap_stream_id,self.old_replication_key, self.client.config["start_date"])  
             return datetime_to_unix_ms(singer.utils.strptime_to_utc(_))
         return bookmark
 
