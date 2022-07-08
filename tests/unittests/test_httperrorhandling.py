@@ -79,9 +79,7 @@ class HTTPErrorCodeHandling(TestCase):
                 raise _
 
     @mock.patch("time.sleep")
-    @mock.patch(
-        "requests.Session.request", side_effect=lambda *_, **__: Mockresponse("", 500)
-    )
+    @mock.patch("requests.Session.request", side_effect=lambda *_, **__: Mockresponse("", 500))
     def test_500_error_custom_message(self, *args):
         """
         Unit test to check proper error message for 500 status code.
@@ -94,9 +92,7 @@ class HTTPErrorCodeHandling(TestCase):
                 raise _
 
     @mock.patch("time.sleep")
-    @mock.patch(
-        "requests.Session.request", side_effect=lambda *_, **__: Mockresponse("", 503)
-    )
+    @mock.patch("requests.Session.request", side_effect=lambda *_, **__: Mockresponse("", 503))
     def test_503_error_custom_message(self, *args):
         """
         Unit test to check proper error message for 503 status code.
