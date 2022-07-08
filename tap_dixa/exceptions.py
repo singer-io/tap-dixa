@@ -20,14 +20,14 @@ class DixaClientError(Exception):
 class DixaClient5xxError(DixaClientError):
     pass
 
+class DixaClient400Error(DixaClientError):
+    pass
 
 class DixaClient401Error(DixaClientError):
     pass
 
-
-class DixaClient400Error(DixaClientError):
+class DixaClient408Error(DixaClientError):
     pass
-
 
 class DixaClient429Error(DixaClientError):
     pass
@@ -38,18 +38,13 @@ class DixaClient422Error(DixaClientError):
 
 
 ERROR_CODE_EXCEPTION_MAPPING = {
-    500: {
-        "raise_exception": DixaClient5xxError,
-        "message": "Server Error",
-    },
-    503: {
-        "raise_exception": DixaClient5xxError,
-        "message": "Server Error",
-    },
-    401: {"raise_exception": DixaClient401Error, "message": "Invalid or missing credentials"},
     400: {"raise_exception": DixaClient400Error, "message": "Invalid query parameters"},
-    429: {"raise_exception": DixaClient429Error, "message": "API limit has been reached"},
+    401: {"raise_exception": DixaClient401Error, "message": "Invalid or missing credentials"},
+    408: {"raise_exception": DixaClient408Error, "message": "Invalid or missing credentials"},
     422: {"raise_exception": DixaClient422Error, "message": "Exceeded max allowed 10 csids per request"},
+    429: {"raise_exception": DixaClient429Error, "message": "API limit has been reached"},
+    500: {"raise_exception": DixaClient5xxError,"message": "Dixa Server Error",},
+    503: {"raise_exception": DixaClient5xxError,"message": "Dixa Server Unavailable",},
 }
 
 

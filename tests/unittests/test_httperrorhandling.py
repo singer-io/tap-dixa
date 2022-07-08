@@ -53,6 +53,18 @@ class HTTPErrorCodeHandling(TestCase):
                 self.assertEqual(str(_), "Invalid or missing credentials")
                 raise _
 
+    @mock.patch("requests.Session.request", side_effect=lambda *_, **__: Mockresponse("", 408))
+    def test_408_error_custom_message(self, *args):
+        """
+        Unit test to check proper error message for 401 status code.
+        """
+        with self.assertRaises(exceptions.DixaClient401Error):
+            try:
+                self.client_obj.get("https://test.com", "/test")
+            except exceptions.DixaClientError as _:
+                self.assertEqual(str(_), "Invalid or missing credentials")
+                raise _
+
     @mock.patch("requests.Session.request", side_effect=lambda *_, **__: Mockresponse("", 422))
     def test_422_error_custom_message(self, *args):
         """
@@ -88,7 +100,7 @@ class HTTPErrorCodeHandling(TestCase):
             try:
                 self.client_obj.get("https://test.com", "/test")
             except exceptions.DixaClientError as _:
-                self.assertEqual(str(_), "Server Error")
+                self.assertEqual(str(_), "Dixa Server Error")
                 raise _
 
     @mock.patch("time.sleep")
@@ -101,5 +113,5 @@ class HTTPErrorCodeHandling(TestCase):
             try:
                 self.client_obj.get("https://test.com", "/test")
             except exceptions.DixaClientError as _:
-                self.assertEqual(str(_), "Server Error")
+                self.assertEqual(str(_), "Dixa Server Unavailable")
                 raise _
