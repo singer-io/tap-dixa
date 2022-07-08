@@ -15,7 +15,7 @@ class Mockresponse:
         self.headers = headers
         self.raise_error = raise_error
 
-    def raise_for_status(self): #noqa
+    def raise_for_status(self):
         if not self.raise_error:
             return self.status_code
 
@@ -56,7 +56,7 @@ class HTTPErrorCodeHandling(TestCase):
     @mock.patch("requests.Session.request", side_effect=lambda *_, **__: Mockresponse("", 408))
     def test_408_error_custom_message(self, *args):
         """
-        Unit test to check proper error message for 401 status code.
+        Unit test to check proper error message for 408 status code.
         """
         with self.assertRaises(exceptions.DixaClient408Error):
             try:
