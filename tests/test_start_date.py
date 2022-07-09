@@ -3,6 +3,7 @@ import os
 from tap_tester import connections, runner
 from tap_tester.logger import LOGGER
 from base import DixaBaseTest
+from datetime import datetime
 
 
 class DixaStartDateTest(DixaBaseTest):
@@ -104,8 +105,12 @@ class DixaStartDateTest(DixaBaseTest):
 
                 # # Verify replication key is greater or equal to start_date for sync 1
                 for replication_date in replication_dates_1:
+                    if isinstance(replication_date, int):
+                        expected_start_date_1 = self.date_value_to_epoch(expected_start_date_1)
+                        expected_start_date_2 = self.date_value_to_epoch(expected_start_date_2)
+
                     self.assertGreaterEqual(
-                        self.parse_date(replication_date), self.parse_date(expected_start_date_1),
+                        replication_date, expected_start_date_1,
                             msg="Report pertains to a date prior to our start date.\n" +
                             "Sync start_date: {}\n".format(expected_start_date_1) +
                             "Record date: {} ".format(replication_date)
@@ -114,7 +119,7 @@ class DixaStartDateTest(DixaBaseTest):
                 # Verify replication key is greater or equal to start_date for sync 2
                 for replication_date in replication_dates_2:
                     self.assertGreaterEqual(
-                        self.parse_date(replication_date), self.parse_date(expected_start_date_2),
+                        replication_date, expected_start_date_2,
                             msg="Report pertains to a date prior to our start date.\n" +
                             "Sync start_date: {}\n".format(expected_start_date_2) +
                             "Record date: {} ".format(replication_date)

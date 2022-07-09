@@ -4,6 +4,7 @@ from tap_tester import connections, menagerie, runner
 from base import DixaBaseTest
 from tap_tester.logger import LOGGER
 
+
 class DixaInterruptedSyncTest(DixaBaseTest):
     """Test tap sets a bookmark and respects it for the next sync of a stream"""
 
@@ -48,11 +49,10 @@ class DixaInterruptedSyncTest(DixaBaseTest):
         ##########################################################################
         
         LOGGER.info("Current Bookmark: {}".format(first_sync_bookmarks))
-        interrupted_sync_states = menagerie.get_state(conn_id)
         interrupted_sync_states = { 'currently_syncing': 'messages',
                                     'bookmarks': {  'conversations': first_sync_bookmarks.get('bookmarks', {}).get('conversations', {}),
-                                                    'messages': {'updated_at_datestring': '2022-06-22T00:00:00.000000Z'},
-                                                    'activity_logs': {'activityTimestamp': self.start_date}}}        
+                                                    'messages': {list(expected_replication_keys['messages'])[0]: 1655856000000},
+                                                    'activity_logs': {list(expected_replication_keys['activity_logs'])[0]: self.start_date}}}        
         completed_streams = {'conversations'}
         pending_streams = {'activity_logs'}
 
@@ -100,31 +100,31 @@ class DixaInterruptedSyncTest(DixaBaseTest):
 
                     if stream in completed_streams:
                         # Verify at least 1 record was replicated in the third sync
-                        if self.parse_date(second_bookmark_value[replication_key]) == self.parse_date(first_bookmark_value[replication_key]):
-                            self.assertEquals(
-                                second_sync_count, 1, 
-                                msg="Incorrent bookmarking for {}, at least one record should be replicated".format(stream))
+                        if second_bookmark_value[replication_key] == first_bookmark_value[replication_key]:
+                            self.assertEquals(second_sync_count,
+                                            1, 
+                                            msg="Incorrent bookmarking for {}, at least one record should be replicated".format(stream))
                         else:
-                            self.assertGreater(
-                                second_sync_count, 1, 
-                                msg="Incorrent bookmarking for {}, more than one records should be replicated if second sync bookmark is greater than first sync".format(stream))
+                            self.assertGreater(second_sync_count,
+                                                1,
+                                                msg="Incorrent bookmarking for {}, more than one records should be replicated if second sync bookmark is greater than first sync".format(stream))
 
                     elif stream == interrupted_sync_states.get('currently_syncing', None):
                         # For interrupted stream records sync count should be less equals
-                        self.assertLessEqual(
-                                second_sync_count, first_sync_count, 
-                                msg="For interrupted stream, seconds sync record count should be lesser or equal to first sync".format(stream))
+                        self.assertLessEqual(second_sync_count,
+                                            first_sync_count,
+                                            msg="For interrupted stream, seconds sync record count should be lesser or equal to first sync".format(stream))
 
                     elif stream in pending_streams:
                         # First sync and second sync record count match
-                        if self.parse_date(second_bookmark_value[replication_key]) == self.parse_date(first_bookmark_value[replication_key]):
-                            self.assertEquals(
-                                second_sync_count, first_sync_count, 
-                                msg="For pending sync stream, if bookmark values are same for first and second sync, record should match".format(stream))
+                        if second_bookmark_value[replication_key] == first_bookmark_value[replication_key]:
+                            self.assertEquals(second_sync_count,
+                                            first_sync_count,
+                                            msg="For pending sync stream, if bookmark values are same for first and second sync, record should match".format(stream))
                         else:
-                            self.assertGreaterEqual(
-                                second_sync_count, first_sync_count, 
-                                msg="For pending sync streams, second sync record count should be more than first sync".format(stream))     
+                            self.assertGreaterEqual(second_sync_count,
+                                                    first_sync_count,
+                                                    msg="For pending sync streams, second sync record count should be more than first sync".format(stream))     
 
                     else:
                         raise Exception("Invalid state of stream {0} in interrupted state, please update appropriate state for the stream".format(stream))
@@ -133,16 +133,12 @@ class DixaInterruptedSyncTest(DixaBaseTest):
                         # Verify the second sync replication key value is Greater or Equal to the first sync bookmark
                         replication_key_value = record.get(replication_key)
 
-                        self.assertLessEqual(
-                            self.parse_date(interrupted_bookmark_value[replication_key]),
-                            self.parse_date(replication_key_value),
-                            msg="Second sync bookmark was set incorrectly, a record with a greater replication-key value was synced."
-                        )
+                        self.assertLessEqual(interrupted_bookmark_value[replication_key],
+                                            replication_key_value,
+                                            msg="Second sync bookmark was set incorrectly, a record with a greater replication-key value was synced.")
 
                         # Verify the second sync bookmark value is the max replication key value for a given stream
-                        self.assertLessEqual(
-                            self.parse_date(replication_key_value),
-                            self.parse_date(second_bookmark_value[replication_key]),
-                            msg="Second sync bookmark was set incorrectly, a record with a greater replication-key value was synced."
-                        )
+                        self.assertLessEqual(replication_key_value,
+                                            second_bookmark_value[replication_key],
+                                            msg="Second sync bookmark was set incorrectly, a record with a greater replication-key value was synced.")
 

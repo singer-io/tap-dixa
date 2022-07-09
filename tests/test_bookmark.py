@@ -58,9 +58,9 @@ class DixaBookMarkTest(DixaBaseTest):
         LOGGER.info("Current Bookmark: {}".format(first_sync_bookmarks))
         new_states = menagerie.get_state(conn_id)
         new_states = {'currently_syncing': None,
-                      'bookmarks': {'conversations': {'updated_at_datestring': '2022-06-22T00:00:00.000000Z'},
-                                    'messages': {'updated_at_datestring': '2022-06-22T00:00:00.000000Z'},
-                                    'activity_logs': {'activityTimestamp': '2022-06-22T00:00:00.485000Z'}}}
+                      'bookmarks': {'conversations': {list(expected_replication_keys['conversations'])[0]: 1655856000000},
+                                    'messages': {list(expected_replication_keys['messages'])[0]: 1655856000000},
+                                    'activity_logs': {list(expected_replication_keys['activity_logs'])[0]: "2022-06-22T00:00:00Z"}}}
 
         menagerie.set_state(conn_id, new_states)
         LOGGER.info("New Bookmark: {}".format(menagerie.get_state(conn_id)))
@@ -99,10 +99,12 @@ class DixaBookMarkTest(DixaBaseTest):
                                        first_sync_records.get(
                                            stream, {}).get('messages', [])
                                        if record.get('action') == 'upsert']
+
                 second_sync_messages = [record.get('data') for record in
                                         second_sync_records.get(
                                             stream, {}).get('messages', [])
                                         if record.get('action') == 'upsert']
+
                 first_bookmark_value = first_sync_bookmarks.get('bookmarks', {stream: None}).get(stream)
                 second_bookmark_value = second_sync_bookmarks.get('bookmarks', {stream: None}).get(stream)
 
@@ -127,50 +129,35 @@ class DixaBookMarkTest(DixaBaseTest):
                     self.assertLessEqual(second_sync_count, first_sync_count)
 
                     # Verify the second sync bookmark is Greater or Equal to the first sync bookmark
-                    self.assertGreaterEqual(self.parse_date(second_bookmark_value.get(replication_key)), 
-                                            self.parse_date(first_bookmark_value.get(replication_key)))
+                    self.assertGreaterEqual(second_bookmark_value.get(replication_key), first_bookmark_value.get(replication_key))
 
                     for record in first_sync_messages:
 
                         # Verify the first sync bookmark value is the max replication key value for a given stream
                         replication_key_value = record.get(replication_key)
    
-                        self.assertLessEqual(
-                            self.parse_date(replication_key_value),
-                            self.parse_date(first_bookmark_value[replication_key]),
-                            msg="First sync bookmark was set incorrectly, a record with a greater replication-key value was synced."
-                        )
+                        self.assertLessEqual(replication_key_value,
+                                            first_bookmark_value[replication_key],
+                                            msg="First sync bookmark was set incorrectly, a record with a greater replication-key value was synced.")
                     
                     for record in second_sync_messages:
                         # Verify the second sync replication key value is Greater or Equal to the first sync bookmark
                         replication_key_value = record.get(replication_key)
 
-                        self.assertLessEqual(
-                            self.parse_date(simulated_bookmark_value[replication_key]),
-                            self.parse_date(replication_key_value),
-                            msg="Second sync bookmark was set incorrectly, a record with a greater replication-key value was synced."
-                        )
+                        self.assertLessEqual(simulated_bookmark_value[replication_key],
+                                            replication_key_value,
+                                            msg="Second sync bookmark was set incorrectly, a record with a greater replication-key value was synced.")
 
                         # Verify the second sync bookmark value is the max replication key value for a given stream
-                        self.assertLessEqual(
-                            self.parse_date(replication_key_value),
-                            self.parse_date(second_bookmark_value[replication_key]),
-                            msg="Second sync bookmark was set incorrectly, a record with a greater replication-key value was synced."
-                        )
+                        self.assertLessEqual(replication_key_value,
+                                            second_bookmark_value[replication_key],
+                                            msg="Second sync bookmark was set incorrectly, a record with a greater replication-key value was synced.")
                         
                 # Verify at least 1 record was replicated in the second sync
-                self.assertGreater(
-                    second_sync_count, 0, msg="We are not fully testing bookmarking for {}".format(stream))
-
-                #Skipping stream `messages` [TDL-19674: incorrect bookmarking strategy for messages stream]
-                if stream == 'messages': 
-                    LOGGER.info("Skipping stream `messages` due to TDL-19674 bookmarking issue")
-                    continue
+                self.assertGreater(second_sync_count, 0, msg="We are not fully testing bookmarking for {}".format(stream))
 
                 # Verify at least 1 record was replicated in the third sync
-                if self.parse_date(second_bookmark_value[replication_key]) == self.parse_date(third_bookmark_value[replication_key]):
-                    self.assertEquals(
-                        third_sync_count, 1, msg="We are not fully testing bookmarking for {}".format(stream))
+                if second_bookmark_value[replication_key] == third_bookmark_value[replication_key]:
+                    self.assertEquals(third_sync_count, 1, msg="We are not fully testing bookmarking for {}".format(stream))
                 else:
-                    self.assertGreater(
-                        third_sync_count, 1, msg="We are not fully testing bookmarking for {}".format(stream))
+                    self.assertGreater(third_sync_count, 1, msg="We are not fully testing bookmarking for {}".format(stream))

@@ -8,6 +8,7 @@ import os
 
 from datetime import timedelta
 from datetime import datetime as dt
+
 from tap_tester import connections, menagerie, runner
 from tap_tester.logger import LOGGER
 
@@ -68,12 +69,12 @@ class DixaBaseTest(unittest.TestCase):
             "conversations": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"updated_at_datestring"}
+                self.REPLICATION_KEYS: {"updated_at"}
             },
             "messages": {
                 self.PRIMARY_KEYS: {"id"},
                 self.REPLICATION_METHOD: self.INCREMENTAL,
-                self.REPLICATION_KEYS: {"updated_at_datestring"}
+                self.REPLICATION_KEYS: {"created_at"}
             },
             "activity_logs": {
                 self.PRIMARY_KEYS: {"id"},
@@ -294,3 +295,13 @@ class DixaBaseTest(unittest.TestCase):
 
             except ValueError:
                 return Exception("Datetime object is not of the format: {}".format(self.START_DATE_FORMAT))
+
+    def date_value_to_epoch(self, date_value):
+        """Convert string or datetime in epoch time"""
+        if isinstance(date_value, str):
+            date_value = self.parse_date(date_value)
+
+        if isinstance(date_value, dt):
+            return date_value.timestamp()
+
+        return date_value
