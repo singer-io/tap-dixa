@@ -22,13 +22,6 @@
         "integer"
       ]
     },
-    "updated_at_datestring": {
-      "type": [
-        "null",
-        "string"
-      ],
-      "format": "date-time"
-    },
     "initial_channel": {
       "type": [
         "null",
