@@ -57,7 +57,6 @@ class DixaInterruptedSyncTest(DixaBaseTest):
         pending_streams = {'activity_logs'}
 
         menagerie.set_state(conn_id, interrupted_sync_states)
-        LOGGER.info("New Bookmark: {}".format(menagerie.get_state(conn_id)))
 
         ##########################################################################
         # Second Sync

@@ -76,7 +76,8 @@ class DixaBookMarkTest(DixaBaseTest):
         ##########################################################################
         # Third Sync: 
         #   To test that we get at least one record per replication
-        #   Assuming that there are new records between 2nd and 3rd sync
+        #   Assuming that there no are new records between 2nd and 3rd sync there should only one record,
+        #   otherwise we should get more than 1 records
         ##########################################################################
 
         third_sync_record_count = self.run_and_verify_sync(conn_id)
