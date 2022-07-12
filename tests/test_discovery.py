@@ -33,6 +33,7 @@ class DixaDiscoveryTest(DixaBaseTest):
         found_catalogs = self.run_and_verify_check_mode(conn_id)
 
         # Verify number of actual streams discovered match expected
+        found_catalog_names = {c['tap_stream_id'] for c in found_catalogs}
         actual_streams = {name for name in found_catalog_names}
         self.assertEquals(actual_streams, streams_to_test, msg="Expected streams not found in the catalog")
 
@@ -102,10 +103,10 @@ class DixaDiscoveryTest(DixaBaseTest):
                 self.assertSetEqual(expected_automatic_fields, actual_automatic_fields)
 
                 # verify that primary keys are given the inclusion of automatic
-                self.assertIn(actual_primary_keys, actual_automatic_fields)
+                self.assertTrue(actual_primary_keys.issubset(actual_automatic_fields))
 
                 # verify that replication keys are given the inclusion of automatic
-                self.assertIn(actual_replication_keys, actual_automatic_fields)
+                self.assertTrue(actual_replication_keys.issubset(actual_automatic_fields))
                 
                 # verify that all fields have inclusion of available metadata.
                 self.assertTrue(

@@ -56,21 +56,9 @@ class DixaPaginationTest(DixaBaseTest):
                                      if message.get('action') == 'upsert']
 
                 # verify records are more than page size so multiple page is working
-                self.assertGreater(record_count_sync, page_size)
-
-                primary_keys_list_1 = primary_keys_list[:page_size]
-                primary_keys_list_2 = primary_keys_list[page_size:2*page_size]
-
-                primary_keys_page_1 = set(primary_keys_list_1)
-                primary_keys_page_2 = set(primary_keys_list_2)
-
-                # Verify by private keys that data is unique for page
-                self.assertEqual(len(primary_keys_page_1), page_size)  # verify there are no dupes on a page
-                self.assertTrue(primary_keys_page_1.isdisjoint(primary_keys_page_2))  # verify there are no dupes between pages
-
                 # Chunk the replicated records (just primary keys) into expected pages
                 pages = []
-                page_count = ceil(len(primary_keys_list) / self.API_LIMIT)
+                page_count = ceil(len(primary_keys_list) / page_size)
                 for page_index in range(page_count):
                     page_start = page_index * page_size
                     page_end = (page_index + 1) * page_size
