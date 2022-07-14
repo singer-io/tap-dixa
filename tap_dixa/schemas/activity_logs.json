@@ -29,6 +29,12 @@
               "string"
           ]
       },
+      "_type": {
+        "type": [
+            "null",
+            "string"
+        ]
+    },
       "author": {
           "type": [
               "null",
@@ -67,6 +73,12 @@
               "object"
           ],
           "properties": {
+            "_type": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
               "agent": {
                   "type": [
                       "null",
