@@ -29,6 +29,12 @@
               "string"
           ]
       },
+      "_type": {
+        "type": [
+            "null",
+            "string"
+        ]
+    },
       "author": {
           "type": [
               "null",
@@ -67,6 +73,12 @@
               "object"
           ],
           "properties": {
+            "_type": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
               "agent": {
                   "type": [
                       "null",
@@ -164,6 +176,78 @@
                       "null",
                       "string"
                   ]
+              },
+              "avatarUrl": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+              },
+              "subject" : {
+                "type": [
+                    "null",
+                    "string"
+                ]
+              },
+              "reason" : {
+                "type": [
+                    "null",
+                    "string"
+                ]
+              },
+              "tag" : {
+                "type": [
+                    "null",
+                    "string"
+                ]
+              },
+              "message" : {
+                "type": [
+                    "null",
+                    "string"
+                ]
+              },
+              "queueLabel" : {
+                "type": [
+                    "null",
+                    "string"
+                ]
+              },
+              "transferType" : {
+                "type": [
+                    "null",
+                    "string"
+                ]
+              },
+              "claimedFromType" : {
+                "type": [
+                    "null",
+                    "string"
+                ]
+              },
+              "claimedFromLabel" : {
+                "type": [
+                    "null",
+                    "string"
+                ]
+              },
+              "destinationId" : {
+                "type": [
+                    "null",
+                    "string"
+                ]
+              },
+              "destinationType" : {
+                "type": [
+                    "null",
+                    "string"
+                ]
+              },
+              "destinationLabel" : {
+                "type": [
+                    "null",
+                    "string"
+                ]
               }
           }
       }
