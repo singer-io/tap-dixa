@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+  * Updated document links in README.md [#5] (https://github.com/singer-io/tap-dixa/pull/5)
+  * Added custom_fields object in `conversations` stream's schema [#17] (https://github.com/singer-io/tap-dixa/pull/17)
+
 ## 1.0.1
   * Extended `activity_logs` schema [#14] (https://github.com/singer-io/tap-dixa/pull/14)
 
