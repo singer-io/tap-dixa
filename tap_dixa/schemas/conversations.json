@@ -274,6 +274,50 @@
         ]
       }
     },
+    "custom_fields": {
+      "type": [
+        "null",
+        "array"
+      ],
+      "items": {
+        "type": [
+          "null",
+          "object"
+        ],
+        "properties":{
+          "archived": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "attribute_id": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "data_type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "identifier": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "value": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      }
+    },
     "tags_info": {
       "type": [
         "null",
