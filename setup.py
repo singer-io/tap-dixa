@@ -19,7 +19,7 @@ setup(
         "jsonschema==2.6.0",
         "python-dateutil==2.8.2",
         "pytz==2018.4",
-        "requests==2.26.0",
+        "requests==2.31.0",
         "simplejson==3.11.1",
         "singer-python==5.12.1",
         "six==1.16.0",
