@@ -4,7 +4,7 @@ requirements_file = "requirements.txt"
 
 setup(
     name="tap-dixa",
-    version="1.0.2",
+    version="1.0.3",
     description="Singer.io tap for extracting data from the Dixa API",
     author="Stitch",
     url="http://singer.io",
@@ -19,11 +19,11 @@ setup(
         "jsonschema==2.6.0",
         "python-dateutil==2.8.2",
         "pytz==2018.4",
-        "requests==2.26.0",
+        "requests==2.31.0",
         "simplejson==3.11.1",
         "singer-python==5.12.1",
         "six==1.16.0",
-        "urllib3==1.26.6",
+        "urllib3==1.26.18",
     ],
     entry_points="""
     [console_scripts]

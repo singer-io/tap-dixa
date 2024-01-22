@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3
+  * Moves urllib3 to a version that is not affected by GHSA-g4mx-q9vg-27p4
+  * Moves requests to a version that is not affected by CVE-2023-32681
+
 ## 1.0.2
   * Updated document links in README.md [#5] (https://github.com/singer-io/tap-dixa/pull/5)
   * Added custom_fields object in `conversations` stream's schema [#17] (https://github.com/singer-io/tap-dixa/pull/17)
