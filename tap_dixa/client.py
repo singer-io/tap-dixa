@@ -3,6 +3,7 @@ import base64
 import backoff
 import requests
 
+from requests.exceptions import ChunkedEncodingError
 from tap_dixa.exceptions import (DixaClient429Error, DixaClient408Error, 
                                 DixaClient5xxError, raise_for_error,
                                 retry_after_wait_gen)
@@ -61,7 +62,7 @@ class Client:
         return self._make_request(url, method="POST", headers=headers, params=params, data=data)
 
     # Added retry logic for 3 times when bad request or server error or rate limit happens
-    @backoff.on_exception(retry_after_wait_gen, (DixaClient429Error, DixaClient5xxError,DixaClient408Error), jitter=None, max_tries=3)
+    @backoff.on_exception(retry_after_wait_gen, (DixaClient429Error, DixaClient5xxError,DixaClient408Error, ChunkedEncodingError), jitter=None, max_tries=5)
     def _make_request(self, url, method, headers=None, params=None, data=None) -> dict:
         """
         Makes the API request.
