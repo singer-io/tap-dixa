@@ -62,7 +62,7 @@ class Client:
         return self._make_request(url, method="POST", headers=headers, params=params, data=data)
 
     # Added retry logic for 3 times when bad request or server error or rate limit happens
-    @backoff.on_exception(retry_after_wait_gen, (DixaClient429Error, DixaClient5xxError,DixaClient408Error, ChunkedEncodingError), jitter=None, max_tries=5)
+    @backoff.on_exception(retry_after_wait_gen, (DixaClient429Error, DixaClient5xxError,DixaClient408Error, ChunkedEncodingError), jitter=None, max_tries=3)
     def _make_request(self, url, method, headers=None, params=None, data=None) -> dict:
         """
         Makes the API request.

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.4
+  * Adds retry to `ChunkedEncodingError` on requests [#21] (https://github.com/singer-io/tap-dixa/pull/21)
+
 ## 1.0.3
   * Moves urllib3 to a version that is not affected by GHSA-g4mx-q9vg-27p4
   * Moves requests to a version that is not affected by CVE-2023-32681
