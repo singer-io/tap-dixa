@@ -1,6 +1,7 @@
 from unittest.mock import patch
 import unittest
 import requests
+from requests.exceptions import ChunkedEncodingError
 from datetime import datetime
 
 from tap_dixa.client import Client, DixaClient429Error
@@ -59,7 +60,7 @@ class Test_backoff(unittest.TestCase):
         # verify that the tap backoff for more than 60 seconds
         time_difference = (after_time - before_time).total_seconds()
         self.assertTrue(60 <= time_difference <= 121)
-        
+
     @patch("time.sleep")
     @patch("requests.Session.request", side_effect= lambda *args, **kwargs : Mockresponse('', 500, headers={}, raise_error=True))
     def test_500_server_error(self, mocked_send, mocked_sleep):
@@ -78,3 +79,17 @@ class Test_backoff(unittest.TestCase):
             Verifying the retry is happening thrice for the 500 server error exception
             """
         self.assertEquals(mocked_send.call_count, 3)
+
+    @patch('time.sleep')
+    @patch('requests.Session.request', side_effect=ChunkedEncodingError)
+    def test_chunkedEncodingError(self, mocked_request, mocked_sleep):
+        """
+        Verifying that ChunkedEncodingError triggers retries 3 times
+        """
+        client = Client(api_token="test")
+
+        with self.assertRaises(ChunkedEncodingError):
+            _ = client.get("https://test.com", "/test")
+
+        # Ensure that the request retries 3 times on ChunkedEncodingError
+        self.assertEqual(mocked_request.call_count, 3)
