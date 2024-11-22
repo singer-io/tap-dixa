@@ -65,7 +65,7 @@ def discover(config: dict):
     if config:
         #Token Validation check before making any api request
         #params : mock parameter values are given for api token validation
-        Client(config["api_token"]).get(base_url=DixaURL.INTEGRATIONS.value,
+        Client(config).get(base_url=DixaURL.INTEGRATIONS.value,
                                         endpoint=ActivityLogs.endpoint,
                                         params={"created_after": datetime.today(),
                                         "created_before": datetime.now()})
