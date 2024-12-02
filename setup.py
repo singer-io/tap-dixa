@@ -12,7 +12,7 @@ setup(
     py_modules=["tap_dixa"],
     install_requires=[
         "backoff==1.8.0",
-        "certifi==2023.7.22",
+        "certifi==2024.7.4",
         "charset-normalizer==2.0.4",
         "ciso8601==2.1.3",
         "idna==3.2",
