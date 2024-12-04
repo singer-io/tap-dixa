@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.5
+  *  Bump urllib3 from 1.26.18 to 1.26.19 [#22] (https://github.com/singer-io/tap-dixa/pull/22)
+  *  Bump requests from 2.31.0 to 2.32.2 [#23] (https://github.com/singer-io/tap-dixa/pull/23)
+  *  Bump idna from 3.2 to 3.7 [#24] (https://github.com/singer-io/tap-dixa/pull/24)
+  *  Bump certifi from 2023.7.22 to 2024.7.4 [#25] (https://github.com/singer-io/tap-dixa/pull/25)
+
 ## 1.0.4
   * Adds retry to `ChunkedEncodingError` on requests [#21] (https://github.com/singer-io/tap-dixa/pull/21)
 
