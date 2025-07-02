@@ -11,7 +11,7 @@ setup(
     classifiers=["Programming Language :: Python :: 3 :: Only"],
     py_modules=["tap_dixa"],
     install_requires=[
-        "backoff==1.8.0",
+        "backoff==1.10.0",
         "certifi==2024.8.30",
         "charset-normalizer==2.0.4",
         "ciso8601==2.1.3",
