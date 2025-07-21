@@ -23,7 +23,7 @@ setup(
         "simplejson==3.11.1",
         "singer-python==5.13.2",
         "six==1.16.0",
-        "urllib3==2.2.3",
+        "urllib3==2.5.0",
     ],
     entry_points="""
     [console_scripts]

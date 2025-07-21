@@ -1,7 +1,8 @@
 # Changelog
 
 ## 1.0.6
-  * Bump dependency versions for twistlock compliance [#27](https://github.com/singer-io/tap-dixa/pull/27)
+  * Bump dependency versions for twistlock compliance
+    [#27](https://github.com/singer-io/tap-dixa/pull/27) [#29](https://github.com/singer-io/tap-dixa/pull/29)
 
 ## 1.0.5
   *  Bump urllib3 from 1.26.18 to 1.26.19 [#22] (https://github.com/singer-io/tap-dixa/pull/22)
