@@ -35,7 +35,7 @@ class DixaDiscoveryTest(DixaBaseTest):
         # Verify number of actual streams discovered match expected
         found_catalog_names = {c['tap_stream_id'] for c in found_catalogs}
         actual_streams = {name for name in found_catalog_names}
-        self.assertEquals(actual_streams, streams_to_test, msg="Expected streams not found in the catalog")
+        self.assertEqual(actual_streams, streams_to_test, msg="Expected streams not found in the catalog")
 
         # Verify stream names follow naming convention
         # streams should only have lowercase alphas and underscores
@@ -88,7 +88,7 @@ class DixaDiscoveryTest(DixaBaseTest):
                 self.assertSetEqual(expected_primary_fields, actual_primary_keys)
 
                 # Verify the actual replication matches our expected replication method.
-                self.assertEquals(expected_replcation_method, actual_replication_method, msg="Replication method does not match with expectations")
+                self.assertEqual(expected_replcation_method, actual_replication_method, msg="Replication method does not match with expectations")
 
                 # Verify primary key(s) match expectations.
                 self.assertSetEqual(expected_replication_fields, actual_replication_keys)

@@ -88,8 +88,8 @@ class DixaStartDateTest(DixaBaseTest):
                                        if message.get('action') == 'upsert']
 
                 # Verify there are no duplicate records in replicated records
-                self.assertEquals(len(primary_keys_list_1), len(set(primary_keys_list_1)))
-                self.assertEquals(len(primary_keys_list_2), len(set(primary_keys_list_2)))
+                self.assertEqual(len(primary_keys_list_1), len(set(primary_keys_list_1)))
+                self.assertEqual(len(primary_keys_list_2), len(set(primary_keys_list_2)))
 
                 primary_keys_sync_1 = set(primary_keys_list_1)
                 primary_keys_sync_2 = set(primary_keys_list_2)
