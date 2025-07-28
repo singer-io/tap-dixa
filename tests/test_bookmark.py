@@ -159,6 +159,6 @@ class DixaBookMarkTest(DixaBaseTest):
 
                 # Verify at least 1 record was replicated in the third sync
                 if second_bookmark_value[replication_key] == third_bookmark_value[replication_key]:
-                    self.assertEquals(third_sync_count, 1, msg="We are not fully testing bookmarking for {}".format(stream))
+                    self.assertEqual(third_sync_count, 1, msg="We are not fully testing bookmarking for {}".format(stream))
                 else:
                     self.assertGreater(third_sync_count, 1, msg="We are not fully testing bookmarking for {}".format(stream))

@@ -44,7 +44,7 @@ class Test_backoff(unittest.TestCase):
             """
             Verifying the retry is happening thrice for the 429 exception
             """
-        self.assertEquals(mocked_send.call_count, 3)
+        self.assertEqual(mocked_send.call_count, 3)
 
     @patch("requests.Session.request", side_effect=mocked_failed_429_request)
     def test_request_timeout_and_backoff(self, mock_send):
@@ -78,7 +78,7 @@ class Test_backoff(unittest.TestCase):
             """
             Verifying the retry is happening thrice for the 500 server error exception
             """
-        self.assertEquals(mocked_send.call_count, 3)
+        self.assertEqual(mocked_send.call_count, 3)
 
     @patch('time.sleep')
     @patch('requests.Session.request', side_effect=ChunkedEncodingError)

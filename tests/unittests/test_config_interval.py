@@ -16,7 +16,7 @@ class test_increemtalstream(unittest.TestCase):
             response = IncrementalStream.get_interval(self)
         except InvalidInterval as e :
             expected_error_message = "invalid interval provided"
-            self.assertEquals(str(e), expected_error_message)
+            self.assertEqual(str(e), expected_error_message)
 
     def test_valid_value_of_interval(self):
         try :
@@ -25,5 +25,4 @@ class test_increemtalstream(unittest.TestCase):
             response = IncrementalStream.get_interval(self)
         except InvalidInterval as e :
             expected_error_message = "invalid interval provided"
-        self.assertEquals(response,Interval.MONTH.value)
-
+        self.assertEqual(response,Interval.MONTH.value)

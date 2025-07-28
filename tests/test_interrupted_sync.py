@@ -94,15 +94,15 @@ class DixaInterruptedSyncTest(DixaBaseTest):
 
                     # collect information specific to incremental streams from syncs 1 & 2
                     replication_key = next(iter(expected_replication_keys[stream]))
-                    
+
                     interrupted_bookmark_value = interrupted_sync_states['bookmarks'][stream]
 
                     if stream in completed_streams:
                         # Verify at least 1 record was replicated in the third sync
                         if second_bookmark_value[replication_key] == first_bookmark_value[replication_key]:
-                            self.assertEquals(second_sync_count,
-                                            1, 
-                                            msg="Incorrent bookmarking for {}, at least one record should be replicated".format(stream))
+                            self.assertEqual(second_sync_count,
+                                             1,
+                                             msg="Incorrent bookmarking for {}, at least one record should be replicated".format(stream))
                         else:
                             self.assertGreater(second_sync_count,
                                                 1,
@@ -117,9 +117,9 @@ class DixaInterruptedSyncTest(DixaBaseTest):
                     elif stream in pending_streams:
                         # First sync and second sync record count match
                         if second_bookmark_value[replication_key] == first_bookmark_value[replication_key]:
-                            self.assertEquals(second_sync_count,
-                                            first_sync_count,
-                                            msg="For pending sync stream, if bookmark values are same for first and second sync, record should match".format(stream))
+                            self.assertEqual(second_sync_count,
+                                             first_sync_count,
+                                             msg="For pending sync stream, if bookmark values are same for first and second sync, record should match".format(stream))
                         else:
                             self.assertGreaterEqual(second_sync_count,
                                                     first_sync_count,

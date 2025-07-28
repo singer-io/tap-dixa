@@ -90,7 +90,7 @@ class TestGetReplicationMethodFromMeta(unittest.TestCase):
         fn covers unittests for all the positive scenarios
         """
         for case in self.positive_test_cases:
-            self.assertEquals(case["expected"], helpers._get_replication_method_from_meta(case["case"]))
+            self.assertEqual(case["expected"], helpers._get_replication_method_from_meta(case["case"]))
 
     def test_negative_scenarios(self):
         """
@@ -122,7 +122,7 @@ class TestGetReplicationKeyFromMeta(unittest.TestCase):
         fn covers unittests for all the positive scenarios
         """
         for case in self.positive_test_cases:
-            self.assertEquals(case["expected"], helpers._get_replication_key_from_meta(case["case"]))
+            self.assertEqual(case["expected"], helpers._get_replication_key_from_meta(case["case"]))
 
     def test_negative_scenarios(self):
         """
@@ -153,7 +153,7 @@ class TestGetKeyPropertiesFromMeta(unittest.TestCase):
         fn covers unittests for all the positive scenarios
         """
         for case in self.positive_test_cases:
-            self.assertEquals(case["expected"], helpers._get_key_properties_from_meta(case["case"]))
+            self.assertEqual(case["expected"], helpers._get_key_properties_from_meta(case["case"]))
 
     def test_negative_scenarios(self):
         """
