@@ -21,7 +21,7 @@ jobs:
           name: 'Pylint'
           command: |
             source /usr/local/share/virtualenvs/tap-dixa/bin/activate
-            uv pip install pylint==2.14.1
+            uv pip install --upgrade pylint
             pylint tap_dixa --disable C,W,R,no-member
       - add_ssh_keys
       - run:
