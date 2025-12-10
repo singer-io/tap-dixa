@@ -32,7 +32,7 @@ class DixaBaseTest(unittest.TestCase):
     START_DATE_FORMAT = "%Y-%m-%dT00:00:00Z"
     BOOKMARK_COMPARISON_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
-    start_date = '2023-10-01T00:00:00Z'
+    start_date = '2021-10-01T00:00:00Z'
     page_size = 10
 
     @staticmethod

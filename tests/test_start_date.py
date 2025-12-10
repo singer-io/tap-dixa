@@ -7,7 +7,7 @@ from datetime import datetime
 
 
 class DixaStartDateTest(DixaBaseTest):
-    start_date = "2024-06-22T00:00:00Z"
+    start_date = "2022-06-22T00:00:00Z"
 
     @staticmethod
     def name():
