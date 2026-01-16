@@ -12,9 +12,10 @@ from tap_dixa.helpers import DixaURL
 class Client:
     """DixaClient Class for performing extraction from DixaApi"""
 
-    def __init__(self, api_token: str):
-        self._api_token = api_token
+    def __init__(self, config: dict):
+        self.config = config
         self._base_url = None
+        self._api_token = config["api_token"]
         self._session = requests.Session()
         self._headers = {}
 
