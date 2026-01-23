@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.8
+  * Bump dependency versions for dependabot compliance [#32](https://github.com/singer-io/tap-dixa/pull/32)
+
 ## 1.0.7
   * Bump dependency versions for dependabot compliance [#29](https://github.com/singer-io/tap-dixa/pull/29)
 
