@@ -123,10 +123,6 @@ def discover(config: dict):
 
     for stream_name, stream_class in STREAMS.items():
         if not _check_stream_access(client, stream_name, stream_class):
-            LOGGER.warning(
-                "Skipping stream '%s' — not accessible with the provided credentials.",
-                stream_name,
-            )
             continue
 
         schema = schemas[stream_name]
