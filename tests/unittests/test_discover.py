@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from tap_dixa.exceptions import DixaClient401Error
 from tap_dixa.helpers import check_stream_access
-from tap_dixa.discover import _check_stream_access, discover
+from tap_dixa.discover import _check_stream_access, _get_probe_params, discover
 from tap_dixa.streams import STREAMS
 
 
@@ -86,22 +86,23 @@ class TestCheckStreamAccess(unittest.TestCase):
 class TestDixaCheckStreamAccess(unittest.TestCase):
     """Tests for the tap-dixa _check_stream_access wrapper in discover.py."""
 
-    def _make_stream_class(self, base_url, endpoint):
+    def _make_stream_class(self, tap_stream_id, base_url, endpoint):
         cls = MagicMock()
+        cls.tap_stream_id = tap_stream_id
         cls.base_url = base_url
         cls.endpoint = endpoint
         return cls
 
     def test_returns_true_when_client_succeeds(self):
         client = MagicMock()
-        stream_cls = self._make_stream_class("https://dev.dixa.io", "/v1/conversations/activitylog")
+        stream_cls = self._make_stream_class("activity_logs", "https://dev.dixa.io", "/v1/conversations/activitylog")
         result = _check_stream_access(client, "activity_logs", stream_cls)
         self.assertTrue(result)
 
     def test_returns_false_when_client_raises_401(self):
         client = MagicMock()
         client.get.side_effect = DixaClient401Error("Unauthorized")
-        stream_cls = self._make_stream_class("https://dev.dixa.io", "/v1/conversations/activitylog")
+        stream_cls = self._make_stream_class("activity_logs", "https://dev.dixa.io", "/v1/conversations/activitylog")
         result = _check_stream_access(client, "activity_logs", stream_cls)
         self.assertFalse(result)
 
@@ -109,9 +110,55 @@ class TestDixaCheckStreamAccess(unittest.TestCase):
         """400/422 from probe params means endpoint is reachable (fallback_accessible=True)."""
         client = MagicMock()
         client.get.side_effect = RuntimeError("422 Unprocessable Entity")
-        stream_cls = self._make_stream_class("https://exports.dixa.io", "/v1/conversation_export")
+        stream_cls = self._make_stream_class("conversations", "https://exports.dixa.io", "/v1/conversation_export")
         result = _check_stream_access(client, "conversations", stream_cls)
         self.assertTrue(result)
+
+
+# ---------------------------------------------------------------------------
+# _get_probe_params
+# ---------------------------------------------------------------------------
+
+class TestGetProbeParams(unittest.TestCase):
+    """Tests for _get_probe_params to ensure each stream uses the correct param names."""
+
+    def _make_stream_class(self, tap_stream_id):
+        cls = MagicMock()
+        cls.tap_stream_id = tap_stream_id
+        return cls
+
+    def test_activity_logs_uses_from_to_datetime(self):
+        """activity_logs must use fromDatetime/toDatetime (RFC-3339 strings)."""
+        params = _get_probe_params(self._make_stream_class("activity_logs"))
+        self.assertIn("fromDatetime", params)
+        self.assertIn("toDatetime", params)
+        self.assertNotIn("created_after", params)
+        self.assertNotIn("created_before", params)
+        # Values should be strings (RFC-3339)
+        self.assertIsInstance(params["fromDatetime"], str)
+        self.assertIsInstance(params["toDatetime"], str)
+
+    def test_conversations_uses_updated_after_before(self):
+        """conversations must use updated_after/updated_before (unix-ms integers)."""
+        params = _get_probe_params(self._make_stream_class("conversations"))
+        self.assertIn("updated_after", params)
+        self.assertIn("updated_before", params)
+        self.assertNotIn("created_after", params)
+        self.assertNotIn("created_before", params)
+        # Values should be integers (unix-ms)
+        self.assertIsInstance(params["updated_after"], int)
+        self.assertIsInstance(params["updated_before"], int)
+
+    def test_messages_uses_created_after_before(self):
+        """messages must use created_after/created_before (unix-ms integers)."""
+        params = _get_probe_params(self._make_stream_class("messages"))
+        self.assertIn("created_after", params)
+        self.assertIn("created_before", params)
+        self.assertNotIn("fromDatetime", params)
+        self.assertNotIn("toDatetime", params)
+        # Values should be integers (unix-ms)
+        self.assertIsInstance(params["created_after"], int)
+        self.assertIsInstance(params["created_before"], int)
 
 
 # ---------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-""" Module providing disovery method of tap-dixa"""
+""" Module providing discovery method of tap-dixa"""
 import json
 from datetime import datetime, timedelta, timezone
 import singer
@@ -15,7 +15,6 @@ from tap_dixa.helpers import (
     date_to_rfc3339,
     get_abs_path,
     check_stream_access,
-    DixaURL
 )
 
 LOGGER = singer.get_logger()
@@ -30,14 +29,22 @@ def _get_probe_params(stream_class):
     end_dt = datetime.now(timezone.utc) - timedelta(days=1)
     start_dt = end_dt - timedelta(seconds=1)
 
-    if stream_class.base_url == DixaURL.INTEGRATIONS.value:
-        # ActivityLogs expects RFC-3339 string params
+    tap_stream_id = stream_class.tap_stream_id
+
+    if tap_stream_id == "activity_logs":
+        # ActivityLogs expects RFC-3339 string params with its own param names
         return {
-            "created_after": date_to_rfc3339(start_dt.isoformat()),
-            "created_before": date_to_rfc3339(end_dt.isoformat()),
+            "fromDatetime": date_to_rfc3339(start_dt.isoformat()),
+            "toDatetime": date_to_rfc3339(end_dt.isoformat()),
+        }
+    elif tap_stream_id == "conversations":
+        # Conversations uses updated_after / updated_before (unix-ms integers)
+        return {
+            "updated_after": datetime_to_unix_ms(start_dt),
+            "updated_before": datetime_to_unix_ms(end_dt),
         }
     else:
-        # Conversations / Messages expect unix-ms integer params
+        # Messages uses created_after / created_before (unix-ms integers)
         return {
             "created_after": datetime_to_unix_ms(start_dt),
             "created_before": datetime_to_unix_ms(end_dt),
