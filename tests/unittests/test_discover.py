@@ -170,7 +170,7 @@ class TestDiscover(unittest.TestCase):
 
         with self.assertRaises(Exception) as ctx:
             discover(self._VALID_CONFIG)
-        self.assertIn("No stream endpoints are accessible", str(ctx.exception))
+        self.assertIn("The credentials do not have read access to any of the supported streams", str(ctx.exception))
 
 
 if __name__ == "__main__":
