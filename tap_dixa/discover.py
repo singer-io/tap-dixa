@@ -14,10 +14,24 @@ from tap_dixa.helpers import (
     datetime_to_unix_ms,
     date_to_rfc3339,
     get_abs_path,
-    check_stream_access,
 )
 
 LOGGER = singer.get_logger()
+
+
+def check_stream_access(probe_fn, auth_error_types):
+    """
+    Probe a stream endpoint and return True if accessible, False on auth error.
+
+    :param probe_fn: Zero-argument callable that performs the API probe.
+    :param auth_error_types: Exception type(s) indicating 401/403 — returns False.
+                             Any other exception is re-raised.
+    """
+    try:
+        probe_fn()
+        return True
+    except auth_error_types:
+        return False
 
 
 def _get_probe_params(stream_class):
@@ -29,46 +43,51 @@ def _get_probe_params(stream_class):
     end_dt = datetime.now(timezone.utc) - timedelta(days=1)
     start_dt = end_dt - timedelta(seconds=1)
 
-    tap_stream_id = stream_class.tap_stream_id
+    stream_config = {
+        "activity_logs": {
+            "start_key": "fromDatetime",
+            "end_key": "toDatetime",
+            "formatter": lambda dt: date_to_rfc3339(dt.isoformat()),
+        },
+        "conversations": {
+            "start_key": "updated_after",
+            "end_key": "updated_before",
+            "formatter": datetime_to_unix_ms,
+        },
+        "default": {
+            "start_key": "created_after",
+            "end_key": "created_before",
+            "formatter": datetime_to_unix_ms,
+        },
+    }
 
-    if tap_stream_id == "activity_logs":
-        # ActivityLogs expects RFC-3339 string params with its own param names
-        return {
-            "fromDatetime": date_to_rfc3339(start_dt.isoformat()),
-            "toDatetime": date_to_rfc3339(end_dt.isoformat()),
-        }
-    elif tap_stream_id == "conversations":
-        # Conversations uses updated_after / updated_before (unix-ms integers)
-        return {
-            "updated_after": datetime_to_unix_ms(start_dt),
-            "updated_before": datetime_to_unix_ms(end_dt),
-        }
-    else:
-        # Messages uses created_after / created_before (unix-ms integers)
-        return {
-            "created_after": datetime_to_unix_ms(start_dt),
-            "created_before": datetime_to_unix_ms(end_dt),
-        }
+    config = stream_config.get(
+        stream_class.tap_stream_id,
+        stream_config["default"],
+    )
+
+    formatter = config["formatter"]
+
+    return {
+        config["start_key"]: formatter(start_dt),
+        config["end_key"]: formatter(end_dt),
+    }
 
 
 def _check_stream_access(client, stream_name, stream_class) -> bool:
     """
     Probes a stream endpoint to verify the API token has access.
     Returns True if the stream is accessible, False if a 401 Unauthorized
-    response is returned. Any other error (e.g. 400 / 422 from the minimal
-    params) means the endpoint is reachable and auth is valid, so True is
-    returned in those cases as well.
+    response is returned. Any other error is re-raised.
     """
     params = _get_probe_params(stream_class)
     return check_stream_access(
-        stream_name,
         probe_fn=lambda: client.get(
             base_url=stream_class.base_url,
             endpoint=stream_class.endpoint,
             params=params,
         ),
         auth_error_types=DixaClient401Error,
-        fallback_accessible=True,
     )
 
 
@@ -130,6 +149,10 @@ def discover(config: dict):
 
     for stream_name, stream_class in STREAMS.items():
         if not _check_stream_access(client, stream_name, stream_class):
+            LOGGER.warning(
+                "Stream '%s' will be excluded from the catalog due to insufficient permissions.",
+                stream_name,
+            )
             continue
 
         schema = schemas[stream_name]

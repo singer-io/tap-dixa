@@ -3,8 +3,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from tap_dixa.exceptions import DixaClient401Error
-from tap_dixa.helpers import check_stream_access
-from tap_dixa.discover import _check_stream_access, _get_probe_params, discover
+from tap_dixa.discover import check_stream_access, _check_stream_access, _get_probe_params, discover
 from tap_dixa.streams import STREAMS
 
 
@@ -18,7 +17,6 @@ class TestCheckStreamAccess(unittest.TestCase):
     def test_returns_true_when_probe_succeeds(self):
         """Probe callable executes without error → stream is accessible."""
         result = check_stream_access(
-            "my_stream",
             probe_fn=lambda: None,
             auth_error_types=DixaClient401Error,
         )
@@ -30,37 +28,21 @@ class TestCheckStreamAccess(unittest.TestCase):
             raise DixaClient401Error("Unauthorized")
 
         result = check_stream_access(
-            "my_stream",
             probe_fn=_raise,
             auth_error_types=DixaClient401Error,
         )
         self.assertFalse(result)
 
-    def test_re_raises_non_auth_error_when_fallback_false(self):
-        """Non-auth error + fallback_accessible=False → exception propagates."""
+    def test_re_raises_non_auth_error(self):
+        """Non-auth error → exception propagates."""
         def _raise():
             raise ValueError("Unexpected")
 
         with self.assertRaises(ValueError):
             check_stream_access(
-                "my_stream",
                 probe_fn=_raise,
                 auth_error_types=DixaClient401Error,
-                fallback_accessible=False,
             )
-
-    def test_returns_true_on_non_auth_error_when_fallback_true(self):
-        """Non-auth error (e.g. 400/422) + fallback_accessible=True → True (auth OK)."""
-        def _raise():
-            raise RuntimeError("400 Bad Request")
-
-        result = check_stream_access(
-            "my_stream",
-            probe_fn=_raise,
-            auth_error_types=DixaClient401Error,
-            fallback_accessible=True,
-        )
-        self.assertTrue(result)
 
     def test_accepts_tuple_of_auth_error_types(self):
         """auth_error_types can be a tuple of exception types."""
@@ -72,7 +54,6 @@ class TestCheckStreamAccess(unittest.TestCase):
         for exc_cls in (AuthA, AuthB):
             with self.subTest(exc=exc_cls.__name__):
                 result = check_stream_access(
-                    "my_stream",
                     probe_fn=lambda e=exc_cls: (_ for _ in ()).throw(e()),
                     auth_error_types=(AuthA, AuthB),
                 )
@@ -106,13 +87,13 @@ class TestDixaCheckStreamAccess(unittest.TestCase):
         result = _check_stream_access(client, "activity_logs", stream_cls)
         self.assertFalse(result)
 
-    def test_returns_true_when_client_raises_other_error(self):
-        """400/422 from probe params means endpoint is reachable (fallback_accessible=True)."""
+    def test_reraises_non_auth_error(self):
+        """Non-auth errors (e.g. 422) propagate from _check_stream_access."""
         client = MagicMock()
         client.get.side_effect = RuntimeError("422 Unprocessable Entity")
         stream_cls = self._make_stream_class("conversations", "https://exports.dixa.io", "/v1/conversation_export")
-        result = _check_stream_access(client, "conversations", stream_cls)
-        self.assertTrue(result)
+        with self.assertRaises(RuntimeError):
+            _check_stream_access(client, "conversations", stream_cls)
 
 
 # ---------------------------------------------------------------------------
