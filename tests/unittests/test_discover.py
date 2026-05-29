@@ -3,71 +3,18 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from tap_dixa.exceptions import DixaClient401Error
-from tap_dixa.discover import check_stream_access, _check_stream_access, _get_probe_params, discover
+from tap_dixa.discover import check_stream_access, _get_probe_params, discover
 from tap_dixa.streams import STREAMS
 
 
 # ---------------------------------------------------------------------------
-# check_stream_access (shared helper)
+# check_stream_access
 # ---------------------------------------------------------------------------
 
 class TestCheckStreamAccess(unittest.TestCase):
-    """Tests for the shared check_stream_access helper in tap_dixa.helpers."""
+    """Tests for the merged check_stream_access function in tap_dixa.discover."""
 
-    def test_returns_true_when_probe_succeeds(self):
-        """Probe callable executes without error → stream is accessible."""
-        result = check_stream_access(
-            probe_fn=lambda: None,
-            auth_error_types=DixaClient401Error,
-        )
-        self.assertTrue(result)
-
-    def test_returns_false_on_auth_error(self):
-        """Auth error raised by probe → stream is not accessible, returns False."""
-        def _raise():
-            raise DixaClient401Error("Unauthorized")
-
-        result = check_stream_access(
-            probe_fn=_raise,
-            auth_error_types=DixaClient401Error,
-        )
-        self.assertFalse(result)
-
-    def test_re_raises_non_auth_error(self):
-        """Non-auth error → exception propagates."""
-        def _raise():
-            raise ValueError("Unexpected")
-
-        with self.assertRaises(ValueError):
-            check_stream_access(
-                probe_fn=_raise,
-                auth_error_types=DixaClient401Error,
-            )
-
-    def test_accepts_tuple_of_auth_error_types(self):
-        """auth_error_types can be a tuple of exception types."""
-        class AuthA(Exception):
-            pass
-        class AuthB(Exception):
-            pass
-
-        for exc_cls in (AuthA, AuthB):
-            with self.subTest(exc=exc_cls.__name__):
-                result = check_stream_access(
-                    probe_fn=lambda e=exc_cls: (_ for _ in ()).throw(e()),
-                    auth_error_types=(AuthA, AuthB),
-                )
-                self.assertFalse(result)
-
-
-# ---------------------------------------------------------------------------
-# _check_stream_access (tap-specific wrapper)
-# ---------------------------------------------------------------------------
-
-class TestDixaCheckStreamAccess(unittest.TestCase):
-    """Tests for the tap-dixa _check_stream_access wrapper in discover.py."""
-
-    def _make_stream_class(self, tap_stream_id, base_url, endpoint):
+    def _make_stream_class(self, tap_stream_id, base_url="https://dev.dixa.io", endpoint="/v1/test"):
         cls = MagicMock()
         cls.tap_stream_id = tap_stream_id
         cls.base_url = base_url
@@ -77,23 +24,24 @@ class TestDixaCheckStreamAccess(unittest.TestCase):
     def test_returns_true_when_client_succeeds(self):
         client = MagicMock()
         stream_cls = self._make_stream_class("activity_logs", "https://dev.dixa.io", "/v1/conversations/activitylog")
-        result = _check_stream_access(client, "activity_logs", stream_cls)
+        result = check_stream_access(client, stream_cls)
         self.assertTrue(result)
+        client.get.assert_called_once()
 
     def test_returns_false_when_client_raises_401(self):
         client = MagicMock()
         client.get.side_effect = DixaClient401Error("Unauthorized")
         stream_cls = self._make_stream_class("activity_logs", "https://dev.dixa.io", "/v1/conversations/activitylog")
-        result = _check_stream_access(client, "activity_logs", stream_cls)
+        result = check_stream_access(client, stream_cls)
         self.assertFalse(result)
 
     def test_reraises_non_auth_error(self):
-        """Non-auth errors (e.g. 422) propagate from _check_stream_access."""
+        """Non-auth errors (e.g. 422) propagate from check_stream_access."""
         client = MagicMock()
         client.get.side_effect = RuntimeError("422 Unprocessable Entity")
         stream_cls = self._make_stream_class("conversations", "https://exports.dixa.io", "/v1/conversation_export")
         with self.assertRaises(RuntimeError):
-            _check_stream_access(client, "conversations", stream_cls)
+            check_stream_access(client, stream_cls)
 
 
 # ---------------------------------------------------------------------------
@@ -160,7 +108,7 @@ class TestDiscover(unittest.TestCase):
             discover({})
 
     @patch("tap_dixa.discover.get_schemas")
-    @patch("tap_dixa.discover._check_stream_access")
+    @patch("tap_dixa.discover.check_stream_access")
     @patch("tap_dixa.discover.Client")
     def test_all_accessible_streams_included_in_catalog(
         self, mock_client_cls, mock_check_access, mock_get_schemas
@@ -180,7 +128,7 @@ class TestDiscover(unittest.TestCase):
         self.assertEqual(returned_stream_names, set(STREAMS.keys()))
 
     @patch("tap_dixa.discover.get_schemas")
-    @patch("tap_dixa.discover._check_stream_access")
+    @patch("tap_dixa.discover.check_stream_access")
     @patch("tap_dixa.discover.Client")
     def test_inaccessible_stream_excluded_from_catalog(
         self, mock_client_cls, mock_check_access, mock_get_schemas
@@ -188,6 +136,7 @@ class TestDiscover(unittest.TestCase):
         """Streams that fail the access check are excluded from the catalog."""
         all_streams = list(STREAMS.keys())
         blocked_stream = all_streams[0]
+        accessible_streams = all_streams[1:]  # at least one accessible to avoid empty-catalog exception
 
         mock_get_schemas.return_value = (
             {name: {"type": "object", "properties": {}} for name in all_streams},
@@ -196,20 +145,20 @@ class TestDiscover(unittest.TestCase):
                                   "valid-replication-keys": ["created_at"]},
                      "breadcrumb": []}] for name in all_streams},
         )
-        mock_check_access.side_effect = lambda client, name, cls: name != blocked_stream
+        mock_check_access.side_effect = lambda client, cls: cls.tap_stream_id != blocked_stream
 
         catalog = discover(self._VALID_CONFIG)
         returned_stream_names = {s.tap_stream_id for s in catalog.streams}
         self.assertNotIn(blocked_stream, returned_stream_names)
-        self.assertEqual(returned_stream_names, set(all_streams) - {blocked_stream})
+        self.assertEqual(returned_stream_names, set(accessible_streams))
 
     @patch("tap_dixa.discover.get_schemas")
-    @patch("tap_dixa.discover._check_stream_access")
+    @patch("tap_dixa.discover.check_stream_access")
     @patch("tap_dixa.discover.Client")
-    def test_all_inaccessible_returns_empty_catalog(
+    def test_all_inaccessible_raises_exception(
         self, mock_client_cls, mock_check_access, mock_get_schemas
     ):
-        """When no streams are accessible, catalog is empty."""
+        """When no streams are accessible, discover() raises an exception."""
         mock_get_schemas.return_value = (
             {name: {"type": "object", "properties": {}} for name in STREAMS},
             {name: [{"metadata": {"table-key-properties": ["id"],
@@ -219,8 +168,9 @@ class TestDiscover(unittest.TestCase):
         )
         mock_check_access.return_value = False
 
-        catalog = discover(self._VALID_CONFIG)
-        self.assertEqual(catalog.streams, [])
+        with self.assertRaises(Exception) as ctx:
+            discover(self._VALID_CONFIG)
+        self.assertIn("No stream endpoints are accessible", str(ctx.exception))
 
 
 if __name__ == "__main__":

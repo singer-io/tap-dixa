@@ -19,21 +19,6 @@ from tap_dixa.helpers import (
 LOGGER = singer.get_logger()
 
 
-def check_stream_access(probe_fn, auth_error_types):
-    """
-    Probe a stream endpoint and return True if accessible, False on auth error.
-
-    :param probe_fn: Zero-argument callable that performs the API probe.
-    :param auth_error_types: Exception type(s) indicating 401/403 — returns False.
-                             Any other exception is re-raised.
-    """
-    try:
-        probe_fn()
-        return True
-    except auth_error_types:
-        return False
-
-
 def _get_probe_params(stream_class):
     """
     Returns minimal params for probing a stream endpoint during discovery.
@@ -74,21 +59,22 @@ def _get_probe_params(stream_class):
     }
 
 
-def _check_stream_access(client, stream_name, stream_class) -> bool:
+def check_stream_access(client, stream_class) -> bool:
     """
     Probes a stream endpoint to verify the API token has access.
     Returns True if the stream is accessible, False if a 401 Unauthorized
     response is returned. Any other error is re-raised.
     """
     params = _get_probe_params(stream_class)
-    return check_stream_access(
-        probe_fn=lambda: client.get(
+    try:
+        client.get(
             base_url=stream_class.base_url,
             endpoint=stream_class.endpoint,
             params=params,
-        ),
-        auth_error_types=DixaClient401Error,
-    )
+        )
+        return True
+    except DixaClient401Error:
+        return False
 
 
 def get_schemas():
@@ -148,7 +134,7 @@ def discover(config: dict):
     client = Client(config["api_token"])
 
     for stream_name, stream_class in STREAMS.items():
-        if not _check_stream_access(client, stream_name, stream_class):
+        if not check_stream_access(client, stream_class):
             LOGGER.warning(
                 "Stream '%s' will be excluded from the catalog due to insufficient permissions.",
                 stream_name,
@@ -169,5 +155,10 @@ def discover(config: dict):
         }
 
         streams.append(catalog_entry)
+
+    if not streams:
+        raise Exception(
+            "The credentials do not have read access to any of the supported streams."
+        )
 
     return Catalog.from_dict({"streams": streams})
