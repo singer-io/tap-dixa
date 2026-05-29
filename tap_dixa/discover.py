@@ -37,12 +37,12 @@ def _get_probe_params(stream_class):
         "conversations": {
             "start_key": "updated_after",
             "end_key": "updated_before",
-            "formatter": datetime_to_unix_ms,
+            "formatter": lambda dt: datetime_to_unix_ms(dt.replace(tzinfo=None)),
         },
         "default": {
             "start_key": "created_after",
             "end_key": "created_before",
-            "formatter": datetime_to_unix_ms,
+            "formatter": lambda dt: datetime_to_unix_ms(dt.replace(tzinfo=None)),
         },
     }
 
