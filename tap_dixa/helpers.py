@@ -31,12 +31,16 @@ def unix_ms_to_date_utc(timestamp_ms: int) -> datetime.datetime:
 
 def datetime_to_unix_ms(datetime_obj: datetime.datetime) -> int:
     """
-    Converts datetime object to unix timestamp in milliseconds
+    Converts datetime object to unix timestamp in milliseconds.
+    Accepts both timezone-aware and timezone-naive datetimes (naive treated as UTC).
 
     :param datetime_obj: A datetime object to convert to unix timestamp
     :return: integer representing unix timestamp in milliseconds
     """
-    epoch = datetime.datetime(1970, 1, 1)
+    if datetime_obj.tzinfo is not None:
+        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+    else:
+        epoch = datetime.datetime(1970, 1, 1)
     return int((datetime_obj - epoch).total_seconds() * 1000)
 
 
