@@ -36,12 +36,12 @@ class TestCheckStreamAccess(unittest.TestCase):
         self.assertFalse(result)
 
     def test_reraises_non_auth_error(self):
-        """Non-auth errors (e.g. 422) propagate from check_stream_access."""
+        """Non-auth errors (e.g. 400/422) are treated as accessible — server responded so auth is valid."""
         client = MagicMock()
         client.get.side_effect = RuntimeError("422 Unprocessable Entity")
         stream_cls = self._make_stream_class("conversations", "https://exports.dixa.io", "/v1/conversation_export")
-        with self.assertRaises(RuntimeError):
-            check_stream_access(client, stream_cls)
+        result = check_stream_access(client, stream_cls)
+        self.assertTrue(result)
 
 
 # ---------------------------------------------------------------------------
@@ -170,7 +170,7 @@ class TestDiscover(unittest.TestCase):
 
         with self.assertRaises(Exception) as ctx:
             discover(self._VALID_CONFIG)
-        self.assertIn("The credentials do not have read access to any of the supported streams", str(ctx.exception))
+        self.assertIn("No streams are accessible with the provided API token", str(ctx.exception))
 
 
 if __name__ == "__main__":

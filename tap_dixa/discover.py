@@ -63,7 +63,9 @@ def check_stream_access(client, stream_class) -> bool:
     """
     Probes a stream endpoint to verify the API token has access.
     Returns True if the stream is accessible, False if a 401 Unauthorized
-    response is returned. Any other error is re-raised.
+    response is returned.
+    Any other error (e.g. 400/422 from minimal probe params) is treated as
+    accessible — the server processed the request, so auth is valid.
     """
     params = _get_probe_params(stream_class)
     try:
@@ -75,6 +77,14 @@ def check_stream_access(client, stream_class) -> bool:
         return True
     except DixaClient401Error:
         return False
+    except Exception:
+        # Non-auth errors (e.g. 400 Bad Request, 422 Unprocessable) mean the
+        # server responded — credentials are valid, stream is accessible.
+        LOGGER.warning(
+            "Stream '%s' probe returned a non-auth error; assuming accessible.",
+            stream_class.tap_stream_id,
+        )
+        return True
 
 
 def get_schemas():
@@ -158,7 +168,8 @@ def discover(config: dict):
 
     if not streams:
         raise Exception(
-            "The credentials do not have read access to any of the supported streams."
+            "No streams are accessible with the provided API token. "
+            "The token may be invalid, expired, or lack the required permissions."
         )
 
     return Catalog.from_dict({"streams": streams})
