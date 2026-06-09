@@ -1,5 +1,9 @@
 # Changelog
 
+# 1.0.9
+  * Bump requests to 2.33.0 for security updates [#34](https://github.com/singer-io/tap-dixa/pull/34)
+
+
 ## 1.0.8
   * Bump dependency versions for dependabot compliance [#32](https://github.com/singer-io/tap-dixa/pull/32)
 
