@@ -15,7 +15,7 @@ setup(
         "certifi==2024.8.30",
         "charset-normalizer==2.0.4",
         "ciso8601==2.1.3",
-        "idna==3.10",
+        "idna==3.15",
         "jsonschema==2.6.0",
         "python-dateutil==2.8.2",
         "pytz==2018.4",
@@ -23,7 +23,7 @@ setup(
         "simplejson==3.11.1",
         "singer-python==5.13.2",
         "six==1.16.0",
-        "urllib3==2.6.3",
+        "urllib3==2.7.0",
     ],
     entry_points="""
     [console_scripts]
