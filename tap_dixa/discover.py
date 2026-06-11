@@ -77,14 +77,6 @@ def check_stream_access(client, stream_class) -> bool:
         return True
     except DixaClient401Error:
         return False
-    except Exception:
-        # Non-auth errors (e.g. 400 Bad Request, 422 Unprocessable) mean the
-        # server responded — credentials are valid, stream is accessible.
-        LOGGER.warning(
-            "Stream '%s' probe returned a non-auth error; assuming accessible.",
-            stream_class.tap_stream_id,
-        )
-        return True
 
 
 def get_schemas():
@@ -135,9 +127,6 @@ def discover(config: dict):
     Probes each stream endpoint inline while building the catalog; streams
     that return 401 Unauthorized are excluded from the catalog.
     """
-
-    if not config or not config.get("api_token"):
-        raise ValueError("'api_token' is required in the config to run discovery.")
 
     schemas, schemas_metadata = get_schemas()
     streams = []
