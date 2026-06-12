@@ -7,7 +7,8 @@ from enum import Enum
 from typing import Iterator
 from urllib.parse import parse_qsl, urlparse
 
-from singer import  utils
+from singer import utils
+
 
 def unix_ms_to_date(timestamp_ms: int) -> str:
     """
@@ -16,7 +17,7 @@ def unix_ms_to_date(timestamp_ms: int) -> str:
     :param ms: unix timestamp in milliseconds
     :return: ISO 8601 date string
     """
-    return datetime.datetime.fromtimestamp(timestamp_ms / 1000).replace(microsecond=0).isoformat()
+    return datetime.datetime.utcfromtimestamp(timestamp_ms / 1000).replace(microsecond=0).isoformat()
 
 
 def unix_ms_to_date_utc(timestamp_ms: int) -> datetime.datetime:
@@ -30,12 +31,17 @@ def unix_ms_to_date_utc(timestamp_ms: int) -> datetime.datetime:
 
 def datetime_to_unix_ms(datetime_obj: datetime.datetime) -> int:
     """
-    Converts datetime object to unix timestamp in milliseconds
+    Converts datetime object to unix timestamp in milliseconds.
+    Accepts both timezone-aware and timezone-naive datetimes (naive treated as UTC).
 
     :param datetime_obj: A datetime object to convert to unix timestamp
     :return: integer representing unix timestamp in milliseconds
     """
-    return int(datetime_obj.timestamp() * 1000)
+    if datetime_obj.tzinfo is not None:
+        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+    else:
+        epoch = datetime.datetime(1970, 1, 1)
+    return int((datetime_obj - epoch).total_seconds() * 1000)
 
 
 def create_csid_params(csids: Iterator) -> dict:

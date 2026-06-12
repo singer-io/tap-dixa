@@ -51,7 +51,7 @@ class DixaInterruptedSyncTest(DixaBaseTest):
         LOGGER.info("Current Bookmark: {}".format(first_sync_bookmarks))
         interrupted_sync_states = { 'currently_syncing': 'messages',
                                     'bookmarks': {  'conversations': first_sync_bookmarks.get('bookmarks', {}).get('conversations', {}),
-                                                    'messages': {list(expected_replication_keys['messages'])[0]: 1655856000000},
+                                                    'messages': {list(expected_replication_keys['messages'])[0]: 1779148800000},
                                                     'activity_logs': {list(expected_replication_keys['activity_logs'])[0]: self.start_date}}}        
         completed_streams = {'conversations'}
         pending_streams = {'activity_logs'}
