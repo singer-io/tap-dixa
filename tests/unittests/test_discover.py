@@ -36,12 +36,12 @@ class TestCheckStreamAccess(unittest.TestCase):
         self.assertFalse(result)
 
     def test_reraises_non_auth_error(self):
-        """Non-auth errors (e.g. 400/422) are treated as accessible — server responded so auth is valid."""
+        """Non-401 errors are re-raised — only DixaClient401Error is caught."""
         client = MagicMock()
         client.get.side_effect = RuntimeError("422 Unprocessable Entity")
         stream_cls = self._make_stream_class("conversations", "https://exports.dixa.io", "/v1/conversation_export")
-        result = check_stream_access(client, stream_cls)
-        self.assertTrue(result)
+        with self.assertRaises(RuntimeError):
+            check_stream_access(client, stream_cls)
 
 
 # ---------------------------------------------------------------------------
@@ -100,11 +100,11 @@ class TestDiscover(unittest.TestCase):
     _VALID_CONFIG = {"api_token": "test-token"}
 
     def test_raises_value_error_without_config(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             discover(None)
 
     def test_raises_value_error_without_api_token(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             discover({})
 
     @patch("tap_dixa.discover.get_schemas")
