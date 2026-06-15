@@ -5,7 +5,6 @@ import singer
 from singer import metadata
 from singer.catalog import Catalog
 from tap_dixa.streams import STREAMS
-from tap_dixa.client import Client
 from tap_dixa.exceptions import DixaClient401Error
 from tap_dixa.helpers import (
     _get_key_properties_from_meta,
@@ -60,13 +59,7 @@ def _get_probe_params(stream_class):
 
 
 def check_stream_access(client, stream_class) -> bool:
-    """
-    Probes a stream endpoint to verify the API token has access.
-    Returns True if the stream is accessible, False if a 401 Unauthorized
-    response is returned.
-    Any other error (e.g. 400/422 from minimal probe params) is treated as
-    accessible — the server processed the request, so auth is valid.
-    """
+    """Return True if accessible, False on 401. Other errors are treated as accessible."""
     params = _get_probe_params(stream_class)
     try:
         client.get(
@@ -77,6 +70,47 @@ def check_stream_access(client, stream_class) -> bool:
         return True
     except DixaClient401Error:
         return False
+
+
+def _prune_inaccessible_children(schemas: dict, schemas_metadata: dict) -> None:
+    """Remove child streams whose parent stream was excluded."""
+    for stream_name, stream_class in list(STREAMS.items()):
+        parent = getattr(stream_class, "parent", None)
+        if stream_name in schemas and parent and parent not in schemas:
+            LOGGER.warning(
+                "Stream '%s' excluded from catalog because its parent stream '%s' is not accessible.",
+                stream_name,
+                parent,
+            )
+            schemas.pop(stream_name, None)
+            schemas_metadata.pop(stream_name, None)
+
+
+def _apply_access_checks(client, schemas: dict, schemas_metadata: dict) -> None:
+    """Remove inaccessible streams from discovery results in place."""
+    inaccessible_streams = [
+        stream_name
+        for stream_name, stream_class in STREAMS.items()
+        if stream_name in schemas and not check_stream_access(client, stream_class)
+    ]
+
+    for stream_name in inaccessible_streams:
+        schemas.pop(stream_name, None)
+        schemas_metadata.pop(stream_name, None)
+
+    _prune_inaccessible_children(schemas, schemas_metadata)
+
+    if inaccessible_streams:
+        if len(inaccessible_streams) == len(STREAMS):
+            raise DixaClient401Error(
+                "HTTP-error-code: 401, Error: The API token supplied does not have 'read' access to any "
+                "of the streams supported by the tap. Data collection cannot be initiated due to lack of permissions."
+            )
+        LOGGER.warning(
+            "The API token supplied does not have 'read' access to the following stream(s): %s. "
+            "These streams have been excluded from the catalog.",
+            ", ".join(inaccessible_streams),
+        )
 
 
 def get_schemas():
@@ -120,26 +154,20 @@ def get_schemas():
     return schemas, schemas_metadata
 
 
-def discover(config: dict):
+def discover(client):
     """
-    Builds the singer catalog for all the streams in the schemas directory.
-    Requires config credentials — raises ValueError if not provided.
-    Probes each stream endpoint inline while building the catalog; streams
-    that return 401 Unauthorized are excluded from the catalog.
+    Builds the singer catalog for all accessible streams.
+    Access to each stream is verified using the provided client and streams
+    the credentials cannot read are excluded from the returned catalog.
     """
-
     schemas, schemas_metadata = get_schemas()
+    _apply_access_checks(client, schemas, schemas_metadata)
+
     streams = []
-    client = Client(config["api_token"])
 
     for stream_name, stream_class in STREAMS.items():
-        if not check_stream_access(client, stream_class):
-            LOGGER.warning(
-                "Stream '%s' will be excluded from the catalog due to insufficient permissions.",
-                stream_name,
-            )
+        if stream_name not in schemas:
             continue
-
         schema = schemas[stream_name]
         schema_meta = schemas_metadata[stream_name]
 
@@ -154,11 +182,5 @@ def discover(config: dict):
         }
 
         streams.append(catalog_entry)
-
-    if not streams:
-        raise Exception(
-            "No streams are accessible with the provided API token. "
-            "The token may be invalid, expired, or lack the required permissions."
-        )
 
     return Catalog.from_dict({"streams": streams})

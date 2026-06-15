@@ -1,9 +1,15 @@
-"""Unit tests for tap_dixa discover module and check_stream_access helper."""
+"""Unit tests for tap_dixa discover module and access-check helpers."""
 import unittest
 from unittest.mock import MagicMock, patch
 
 from tap_dixa.exceptions import DixaClient401Error
-from tap_dixa.discover import check_stream_access, _get_probe_params, discover
+from tap_dixa.discover import (
+    _apply_access_checks,
+    _get_probe_params,
+    _prune_inaccessible_children,
+    check_stream_access,
+    discover,
+)
 from tap_dixa.streams import STREAMS
 
 
@@ -97,21 +103,12 @@ class TestGetProbeParams(unittest.TestCase):
 class TestDiscover(unittest.TestCase):
     """Tests for the discover() function in tap_dixa.discover."""
 
-    _VALID_CONFIG = {"api_token": "test-token"}
-
-    def test_raises_value_error_without_config(self):
-        with self.assertRaises(TypeError):
-            discover(None)
-
-    def test_raises_value_error_without_api_token(self):
-        with self.assertRaises(KeyError):
-            discover({})
+    def _client(self):
+        return MagicMock()
 
     @patch("tap_dixa.discover.get_schemas")
-    @patch("tap_dixa.discover.check_stream_access")
-    @patch("tap_dixa.discover.Client")
     def test_all_accessible_streams_included_in_catalog(
-        self, mock_client_cls, mock_check_access, mock_get_schemas
+        self, mock_get_schemas
     ):
         """All streams pass access check → all appear in the catalog."""
         mock_get_schemas.return_value = (
@@ -121,17 +118,17 @@ class TestDiscover(unittest.TestCase):
                                   "valid-replication-keys": ["created_at"]},
                      "breadcrumb": []}] for name in STREAMS},
         )
-        mock_check_access.return_value = True
+        with patch("tap_dixa.discover._apply_access_checks") as mock_apply:
+            catalog = discover(self._client())
 
-        catalog = discover(self._VALID_CONFIG)
+        mock_apply.assert_called_once()
         returned_stream_names = {s.tap_stream_id for s in catalog.streams}
         self.assertEqual(returned_stream_names, set(STREAMS.keys()))
 
     @patch("tap_dixa.discover.get_schemas")
     @patch("tap_dixa.discover.check_stream_access")
-    @patch("tap_dixa.discover.Client")
     def test_inaccessible_stream_excluded_from_catalog(
-        self, mock_client_cls, mock_check_access, mock_get_schemas
+        self, mock_check_access, mock_get_schemas
     ):
         """Streams that fail the access check are excluded from the catalog."""
         all_streams = list(STREAMS.keys())
@@ -147,16 +144,15 @@ class TestDiscover(unittest.TestCase):
         )
         mock_check_access.side_effect = lambda client, cls: cls.tap_stream_id != blocked_stream
 
-        catalog = discover(self._VALID_CONFIG)
+        catalog = discover(self._client())
         returned_stream_names = {s.tap_stream_id for s in catalog.streams}
         self.assertNotIn(blocked_stream, returned_stream_names)
         self.assertEqual(returned_stream_names, set(accessible_streams))
 
     @patch("tap_dixa.discover.get_schemas")
     @patch("tap_dixa.discover.check_stream_access")
-    @patch("tap_dixa.discover.Client")
     def test_all_inaccessible_raises_exception(
-        self, mock_client_cls, mock_check_access, mock_get_schemas
+        self, mock_check_access, mock_get_schemas
     ):
         """When no streams are accessible, discover() raises an exception."""
         mock_get_schemas.return_value = (
@@ -168,9 +164,43 @@ class TestDiscover(unittest.TestCase):
         )
         mock_check_access.return_value = False
 
-        with self.assertRaises(Exception) as ctx:
-            discover(self._VALID_CONFIG)
-        self.assertIn("No streams are accessible with the provided API token", str(ctx.exception))
+        with self.assertRaises(DixaClient401Error) as ctx:
+            discover(self._client())
+        self.assertIn("does not have 'read' access to any", str(ctx.exception))
+
+
+class TestApplyAccessChecks(unittest.TestCase):
+    """Tests for _apply_access_checks() and child-pruning helper."""
+
+    def test_prune_inaccessible_children_is_noop_for_flat_streams(self):
+        schemas = {name: {} for name in STREAMS}
+        metadata_map = {name: [] for name in STREAMS}
+
+        _prune_inaccessible_children(schemas, metadata_map)
+
+        self.assertEqual(set(schemas), set(STREAMS))
+        self.assertEqual(set(metadata_map), set(STREAMS))
+
+    @patch("tap_dixa.discover.check_stream_access")
+    def test_apply_access_checks_removes_inaccessible_streams(self, mock_check_access):
+        blocked_stream = next(iter(STREAMS))
+        mock_check_access.side_effect = lambda client, cls: cls.tap_stream_id != blocked_stream
+        schemas = {name: {} for name in STREAMS}
+        metadata_map = {name: [] for name in STREAMS}
+
+        _apply_access_checks(MagicMock(), schemas, metadata_map)
+
+        self.assertNotIn(blocked_stream, schemas)
+        self.assertNotIn(blocked_stream, metadata_map)
+
+    @patch("tap_dixa.discover.check_stream_access")
+    def test_apply_access_checks_raises_when_all_streams_blocked(self, mock_check_access):
+        mock_check_access.return_value = False
+        schemas = {name: {} for name in STREAMS}
+        metadata_map = {name: [] for name in STREAMS}
+
+        with self.assertRaises(DixaClient401Error):
+            _apply_access_checks(MagicMock(), schemas, metadata_map)
 
 
 if __name__ == "__main__":
