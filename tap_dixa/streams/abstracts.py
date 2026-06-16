@@ -62,7 +62,7 @@ class IncrementalStream(BaseStream):
     interval = None
     old_replication_key = None
     
-    def get_bookmark(self,state :dict,config: dict) ->int:
+    def get_bookmark(self,state :dict) ->int:
         """
         A wrapper for singer.get_bookmark to deal with backward compatibility for bookmark values.
         :param state: A dictionary representing singer state
@@ -72,7 +72,7 @@ class IncrementalStream(BaseStream):
         bookmark = singer.get_bookmark(state, self.tap_stream_id, self.replication_key, False)
         if not bookmark:
             # get previous bookmark value if the current dosent exists or default to start date
-            _ = singer.get_bookmark(state, self.tap_stream_id,self.old_replication_key, config["start_date"])   
+            _ = singer.get_bookmark(state, self.tap_stream_id,self.old_replication_key, self.client.config["start_date"])  
             return datetime_to_unix_ms(singer.utils.strptime_to_utc(_))
         return bookmark
 
@@ -106,7 +106,7 @@ class IncrementalStream(BaseStream):
 
         return Interval.MONTH.value
 
-    def sync(self, state: dict, stream_schema: dict, stream_metadata: dict, config: dict, transformer: singer.Transformer) -> dict:
+    def sync(self, state: dict, stream_schema: dict, stream_metadata: dict, transformer: singer.Transformer) -> dict:
         """
         The sync logic for an incremental stream.
 
@@ -117,9 +117,10 @@ class IncrementalStream(BaseStream):
         :param transformer: A singer Transformer object
         :return: State data in the form of a dictionary
         """
+        config = self.client.config
         if config.get("interval"):
             self.set_interval(config.get("interval"))
-        start_date_epoch = self.get_bookmark(state,config)
+        start_date_epoch = self.get_bookmark(state)
         # bookmark_datetime = singer.utils.strptime_to_utc(start_date)
         max_datetime = bookmark_datetime = start_date_epoch
 
@@ -149,7 +150,7 @@ class FullTableStream(BaseStream):
 
     replication_method = "FULL_TABLE"
 
-    def sync(self, state: dict, stream_schema: dict, stream_metadata: dict, config: dict, transformer: singer.Transformer) -> dict:
+    def sync(self, state: dict, stream_schema: dict, stream_metadata: dict,transformer: singer.Transformer) -> dict:
         """
         The sync logic for an full table stream.
 
@@ -161,7 +162,7 @@ class FullTableStream(BaseStream):
         :return: State data in the form of a dictionary
         """
         with singer.metrics.record_counter(self.tap_stream_id) as counter:
-            for record in self.get_records(config):
+            for record in self.get_records():
                 transformed_record = transformer.transform(record, stream_schema, stream_metadata)
                 singer.write_record(self.tap_stream_id, transformed_record)
                 counter.increment()
