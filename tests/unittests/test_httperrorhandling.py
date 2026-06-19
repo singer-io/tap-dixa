@@ -27,7 +27,13 @@ class HTTPErrorCodeHandling(TestCase):
     Test cases to verify error is raised with proper message  for get_resource method.
     """
 
-    client_obj = Client({"api_token": "TEST"})
+    def setUp(self):
+        self.check_access_patcher = mock.patch.object(Client, "check_access", return_value=True)
+        self.check_access_patcher.start()
+        self.client_obj = Client("TEST")
+
+    def tearDown(self):
+        self.check_access_patcher.stop()
 
     @mock.patch("requests.Session.request", side_effect=lambda *_, **__: Mockresponse("", 400))
     def test_400_error_custom_message(self, *args): 
@@ -115,3 +121,36 @@ class HTTPErrorCodeHandling(TestCase):
             except exceptions.DixaClientError as _:
                 self.assertEqual(str(_), "Dixa Server Unavailable")
                 raise _
+
+
+class ClientCheckAccessInit(TestCase):
+    """Tests for client initialization and check_access behavior."""
+
+    @mock.patch.object(Client, "check_access", return_value=True)
+    def test_init_calls_check_access(self, mock_check_access):
+        Client("TEST")
+        mock_check_access.assert_called_once()
+
+    @mock.patch.object(Client, "get")
+    def test_check_access_raises_for_invalid_credentials(self, mock_get):
+        mock_get.side_effect = exceptions.DixaClient401Error("Unauthorized")
+        client = Client.__new__(Client)
+        client._api_token = "TEST"
+        client._base_url = None
+        client._session = mock.Mock()
+        client._headers = {}
+
+        with self.assertRaises(exceptions.DixaClient401Error):
+            Client.check_access(client)
+
+    @mock.patch.object(Client, "get")
+    def test_check_access_reraises_non_auth_client_errors(self, mock_get):
+        mock_get.side_effect = exceptions.DixaClient429Error("Rate limit")
+        client = Client.__new__(Client)
+        client._api_token = "TEST"
+        client._base_url = None
+        client._session = mock.Mock()
+        client._headers = {}
+
+        with self.assertRaises(exceptions.DixaClient429Error):
+            Client.check_access(client)
