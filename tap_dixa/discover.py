@@ -104,8 +104,7 @@ def _apply_access_checks(client, schemas: dict, schemas_metadata: dict) -> None:
 
     if not accessible_streams:
         raise DixaClient401Error(
-            "HTTP-error-code: 401, Error: The credentials do not have "
-            "'read' access to any supported streams."
+            "Error: The credentials do not have 'read' access to any supported streams."
         )
     if inaccessible_streams:
         LOGGER.warning(
