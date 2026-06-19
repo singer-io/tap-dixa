@@ -166,7 +166,7 @@ class TestDiscover(unittest.TestCase):
 
         with self.assertRaises(DixaClient401Error) as ctx:
             discover(self._client())
-        self.assertIn("does not have 'read' access to any", str(ctx.exception))
+        self.assertIn("do not have 'read' access to any", str(ctx.exception))
 
 
 class TestApplyAccessChecks(unittest.TestCase):

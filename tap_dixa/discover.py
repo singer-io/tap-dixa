@@ -100,15 +100,16 @@ def _apply_access_checks(client, schemas: dict, schemas_metadata: dict) -> None:
 
     _prune_inaccessible_children(schemas, schemas_metadata)
 
+    accessible_streams = [s for s in STREAMS if s in schemas]
+
+    if not accessible_streams:
+        raise DixaClient401Error(
+            "HTTP-error-code: 401, Error: The credentials do not have "
+            "'read' access to any supported streams."
+        )
     if inaccessible_streams:
-        if len(inaccessible_streams) == len(STREAMS):
-            raise DixaClient401Error(
-                "HTTP-error-code: 401, Error: The API token supplied does not have 'read' access to any "
-                "of the streams supported by the tap. Data collection cannot be initiated due to lack of permissions."
-            )
         LOGGER.warning(
-            "The API token supplied does not have 'read' access to the following stream(s): %s. "
-            "These streams have been excluded from the catalog.",
+            "No 'read' access to stream(s): %s. Excluded from catalog.",
             ", ".join(inaccessible_streams),
         )
 

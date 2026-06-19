@@ -1,13 +1,14 @@
 """ Module providing DixaAPi Client"""
 import base64
+from datetime import datetime, timedelta, timezone
 import backoff
 import requests
 from requests.exceptions import ChunkedEncodingError
 
-from tap_dixa.exceptions import (DixaClient429Error, DixaClient408Error, 
-                                DixaClient5xxError, raise_for_error,
-                                retry_after_wait_gen)
-from tap_dixa.helpers import DixaURL
+from tap_dixa.exceptions import (DixaClient429Error, DixaClient408Error,
+                                DixaClient5xxError, DixaClient401Error,
+                                raise_for_error, retry_after_wait_gen)
+from tap_dixa.helpers import DixaURL, date_to_rfc3339
 
 class Client:
     """DixaClient Class for performing extraction from DixaApi"""
@@ -17,6 +18,28 @@ class Client:
         self._base_url = None
         self._session = requests.Session()
         self._headers = {}
+        self.check_access()
+
+    def check_access(self) -> bool:
+        """Checks credential validity by probing the Dixa integrations API."""
+        end_dt = datetime.now(timezone.utc) - timedelta(days=1)
+        start_dt = end_dt - timedelta(seconds=1)
+
+        params = {
+            "fromDatetime": date_to_rfc3339(start_dt.isoformat()),
+            "toDatetime": date_to_rfc3339(end_dt.isoformat()),
+            "pageLimit": 1,
+        }
+
+        try:
+            self.get(
+                base_url=DixaURL.INTEGRATIONS.value,
+                endpoint="/v1/conversations/activitylog",
+                params=params,
+            )
+            return True
+        except DixaClient401Error:
+            raise DixaClient401Error("Invalid or missing credentials") from None
 
     @staticmethod
     def _to_base64(string: str) -> str:
