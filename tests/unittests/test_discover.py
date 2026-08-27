@@ -6,7 +6,6 @@ from tap_dixa.exceptions import DixaClient401Error
 from tap_dixa.discover import (
     _apply_access_checks,
     _get_probe_params,
-    _prune_inaccessible_children,
     check_stream_access,
     discover,
 )
@@ -170,16 +169,7 @@ class TestDiscover(unittest.TestCase):
 
 
 class TestApplyAccessChecks(unittest.TestCase):
-    """Tests for _apply_access_checks() and child-pruning helper."""
-
-    def test_prune_inaccessible_children_is_noop_for_flat_streams(self):
-        schemas = {name: {} for name in STREAMS}
-        metadata_map = {name: [] for name in STREAMS}
-
-        _prune_inaccessible_children(schemas, metadata_map)
-
-        self.assertEqual(set(schemas), set(STREAMS))
-        self.assertEqual(set(metadata_map), set(STREAMS))
+    """Tests for _apply_access_checks()."""
 
     @patch("tap_dixa.discover.check_stream_access")
     def test_apply_access_checks_removes_inaccessible_streams(self, mock_check_access):

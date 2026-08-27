@@ -68,22 +68,13 @@ def check_stream_access(client, stream_class) -> bool:
             params=params,
         )
         return True
-    except DixaClient401Error:
-        return False
-
-
-def _prune_inaccessible_children(schemas: dict, schemas_metadata: dict) -> None:
-    """Remove child streams whose parent stream was excluded."""
-    for stream_name, stream_class in list(STREAMS.items()):
-        parent = getattr(stream_class, "parent", None)
-        if stream_name in schemas and parent and parent not in schemas:
-            LOGGER.warning(
-                "Stream '%s' excluded from catalog because its parent stream '%s' is not accessible.",
-                stream_name,
-                parent,
+    except DixaClient401Error as e:
+        LOGGER.warning(
+                "Unauthorized Stream: %s, excluding from catalog. HTTP-Error-Message:'%s'",
+                stream_class.tap_stream_id,
+                str(e),
             )
-            schemas.pop(stream_name, None)
-            schemas_metadata.pop(stream_name, None)
+        return False
 
 
 def _apply_access_checks(client, schemas: dict, schemas_metadata: dict) -> None:
@@ -98,8 +89,6 @@ def _apply_access_checks(client, schemas: dict, schemas_metadata: dict) -> None:
         schemas.pop(stream_name, None)
         schemas_metadata.pop(stream_name, None)
 
-    _prune_inaccessible_children(schemas, schemas_metadata)
-
     accessible_streams = [s for s in STREAMS if s in schemas]
 
     if not accessible_streams:
@@ -108,7 +97,7 @@ def _apply_access_checks(client, schemas: dict, schemas_metadata: dict) -> None:
         )
     if inaccessible_streams:
         LOGGER.warning(
-            "No 'read' access to stream(s): %s. Excluded from catalog.",
+            "Unauthorized streams excluded from catalog: %s",
             ", ".join(inaccessible_streams),
         )
 

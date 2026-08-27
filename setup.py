@@ -14,7 +14,7 @@ setup(
         "backoff==1.10.0",
         "certifi==2024.8.30",
         "charset-normalizer==2.0.4",
-        "ciso8601==2.1.3",
+        "ciso8601==2.3.3",
         "idna==3.10",
         "jsonschema==2.6.0",
         "python-dateutil==2.8.2",
