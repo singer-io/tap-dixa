@@ -59,7 +59,7 @@ def _get_probe_params(stream_class):
 
 
 def check_stream_access(client, stream_class) -> bool:
-    """Return True if accessible, False on 401. Other errors are treated as accessible."""
+    """Return True if accessible, False on 401. Non-401 errors are re-raised."""
     params = _get_probe_params(stream_class)
     try:
         client.get(
@@ -77,13 +77,26 @@ def check_stream_access(client, stream_class) -> bool:
         return False
 
 
+def _is_redundant_probe(client, stream_class) -> bool:
+    """Return True when stream probe duplicates a successful bootstrap access probe."""
+    validated_probe = None
+    if hasattr(client, "__dict__"):
+        validated_probe = client.__dict__.get("_validated_probe")
+    if not validated_probe:
+        return False
+    return validated_probe == (stream_class.base_url, stream_class.endpoint)
+
+
 def _apply_access_checks(client, schemas: dict, schemas_metadata: dict) -> None:
     """Remove inaccessible streams from discovery results in place."""
-    inaccessible_streams = [
-        stream_name
-        for stream_name, stream_class in STREAMS.items()
-        if stream_name in schemas and not check_stream_access(client, stream_class)
-    ]
+    inaccessible_streams = []
+    for stream_name, stream_class in STREAMS.items():
+        if stream_name not in schemas:
+            continue
+        if _is_redundant_probe(client, stream_class):
+            continue
+        if not check_stream_access(client, stream_class):
+            inaccessible_streams.append(stream_name)
 
     for stream_name in inaccessible_streams:
         schemas.pop(stream_name, None)

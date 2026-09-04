@@ -192,6 +192,22 @@ class TestApplyAccessChecks(unittest.TestCase):
         with self.assertRaises(DixaClient401Error):
             _apply_access_checks(MagicMock(), schemas, metadata_map)
 
+    @patch("tap_dixa.discover.check_stream_access", return_value=True)
+    def test_apply_access_checks_skips_activity_logs_when_client_already_validated(self, mock_check_access):
+        schemas = {name: {} for name in STREAMS}
+        metadata_map = {name: [] for name in STREAMS}
+        client = MagicMock()
+        client.__dict__["_validated_probe"] = (
+            STREAMS["activity_logs"].base_url,
+            STREAMS["activity_logs"].endpoint,
+        )
+
+        _apply_access_checks(client, schemas, metadata_map)
+
+        checked_streams = [call.args[1].tap_stream_id for call in mock_check_access.call_args_list]
+        self.assertNotIn("activity_logs", checked_streams)
+        self.assertEqual(len(checked_streams), len(STREAMS) - 1)
+
 
 if __name__ == "__main__":
     unittest.main()

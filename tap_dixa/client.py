@@ -18,6 +18,7 @@ class Client:
         self._base_url = None
         self._session = requests.Session()
         self._headers = {}
+        self._validated_probe = None
         self.check_access()
 
     def check_access(self) -> bool:
@@ -36,6 +37,10 @@ class Client:
                 base_url=DixaURL.INTEGRATIONS.value,
                 endpoint="/v1/conversations/activitylog",
                 params=params,
+            )
+            self._validated_probe = (
+                DixaURL.INTEGRATIONS.value,
+                "/v1/conversations/activitylog",
             )
             return True
         except DixaClient401Error:
