@@ -27,6 +27,13 @@ def mocked_failed_429_request(*args, **kwargs):
 
 class Test_backoff(unittest.TestCase):
 
+    def setUp(self):
+        self.check_access_patcher = patch.object(Client, "check_access", return_value=True)
+        self.check_access_patcher.start()
+
+    def tearDown(self):
+        self.check_access_patcher.stop()
+
     @patch("time.sleep")
     @patch("requests.Session.request", side_effect=mocked_failed_429_request)
     def test_too_many_requests_429_error(self, mocked_send, mocked_sleep):

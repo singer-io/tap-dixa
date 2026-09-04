@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.0
+  * Added per-stream access checks during discovery; streams returning 401 Unauthorized are excluded from the catalog [#33](https://github.com/singer-io/tap-dixa/pull/33)
+
 ## 1.0.8
   * Bump dependency versions for dependabot compliance [#32](https://github.com/singer-io/tap-dixa/pull/32)
 

@@ -1,17 +1,119 @@
-""" Module providing disovery method of tap-dixa"""
+""" Module providing discovery method of tap-dixa"""
 import json
+from datetime import datetime, timedelta, timezone
+import singer
 from singer import metadata
 from singer.catalog import Catalog
-from tap_dixa.streams import STREAMS, ActivityLogs
-from tap_dixa.client import Client
+from tap_dixa.streams import STREAMS
+from tap_dixa.exceptions import DixaClient401Error
 from tap_dixa.helpers import (
     _get_key_properties_from_meta,
     _get_replication_key_from_meta,
     _get_replication_method_from_meta,
+    datetime_to_unix_ms,
+    date_to_rfc3339,
     get_abs_path,
-    DixaURL
 )
-from datetime import datetime
+
+LOGGER = singer.get_logger()
+
+
+def _get_probe_params(stream_class):
+    """
+    Returns minimal params for probing a stream endpoint during discovery.
+    Uses a 1-second window 1 day in the past to minimise data returned
+    while still producing a valid request that exercises authentication.
+    """
+    end_dt = datetime.now(timezone.utc) - timedelta(days=1)
+    start_dt = end_dt - timedelta(seconds=1)
+
+    stream_config = {
+        "activity_logs": {
+            "start_key": "fromDatetime",
+            "end_key": "toDatetime",
+            "formatter": lambda dt: date_to_rfc3339(dt.isoformat()),
+        },
+        "conversations": {
+            "start_key": "updated_after",
+            "end_key": "updated_before",
+            "formatter": lambda dt: datetime_to_unix_ms(dt.replace(tzinfo=None)),
+        },
+        "default": {
+            "start_key": "created_after",
+            "end_key": "created_before",
+            "formatter": lambda dt: datetime_to_unix_ms(dt.replace(tzinfo=None)),
+        },
+    }
+
+    config = stream_config.get(
+        stream_class.tap_stream_id,
+        stream_config["default"],
+    )
+
+    formatter = config["formatter"]
+
+    return {
+        config["start_key"]: formatter(start_dt),
+        config["end_key"]: formatter(end_dt),
+    }
+
+
+def check_stream_access(client, stream_class) -> bool:
+    """Return True if accessible, False on 401. Non-401 errors are re-raised."""
+    params = _get_probe_params(stream_class)
+    try:
+        client.get(
+            base_url=stream_class.base_url,
+            endpoint=stream_class.endpoint,
+            params=params,
+        )
+        return True
+    except DixaClient401Error as e:
+        LOGGER.warning(
+                "Unauthorized Stream: %s, excluding from catalog. HTTP-Error-Message:'%s'",
+                stream_class.tap_stream_id,
+                str(e),
+            )
+        return False
+
+
+def _is_redundant_probe(client, stream_class) -> bool:
+    """Return True when stream probe duplicates a successful bootstrap access probe."""
+    validated_probe = None
+    if hasattr(client, "__dict__"):
+        validated_probe = client.__dict__.get("_validated_probe")
+    if not validated_probe:
+        return False
+    return validated_probe == (stream_class.base_url, stream_class.endpoint)
+
+
+def _apply_access_checks(client, schemas: dict, schemas_metadata: dict) -> None:
+    """Remove inaccessible streams from discovery results in place."""
+    inaccessible_streams = []
+    for stream_name, stream_class in STREAMS.items():
+        if stream_name not in schemas:
+            continue
+        if _is_redundant_probe(client, stream_class):
+            continue
+        if not check_stream_access(client, stream_class):
+            inaccessible_streams.append(stream_name)
+
+    for stream_name in inaccessible_streams:
+        schemas.pop(stream_name, None)
+        schemas_metadata.pop(stream_name, None)
+
+    accessible_streams = [s for s in STREAMS if s in schemas]
+
+    if not accessible_streams:
+        raise DixaClient401Error(
+            "Error: The credentials do not have 'read' access to any supported streams."
+        )
+    if inaccessible_streams:
+        LOGGER.warning(
+            "Unauthorized streams excluded from catalog: %s",
+            ", ".join(inaccessible_streams),
+        )
+
 
 def get_schemas():
     """
@@ -54,28 +156,26 @@ def get_schemas():
     return schemas, schemas_metadata
 
 
-def discover(config: dict):
+def discover(client):
     """
-    Builds the singer catalog for all the streams in the schemas directory.
+    Builds the singer catalog for all accessible streams.
+    Access to each stream is verified using the provided client and streams
+    the credentials cannot read are excluded from the returned catalog.
     """
-
     schemas, schemas_metadata = get_schemas()
+    _apply_access_checks(client, schemas, schemas_metadata)
+
     streams = []
 
-    if config:
-        #Token Validation check before making any api request
-        #params : mock parameter values are given for api token validation
-        Client(config["api_token"]).get(base_url=DixaURL.INTEGRATIONS.value,
-                                        endpoint=ActivityLogs.endpoint,
-                                        params={"created_after": datetime.today(),
-                                        "created_before": datetime.now()})
-
-    for schema_name, schema in schemas.items():
-        schema_meta = schemas_metadata[schema_name]
+    for stream_name, stream_class in STREAMS.items():
+        if stream_name not in schemas:
+            continue
+        schema = schemas[stream_name]
+        schema_meta = schemas_metadata[stream_name]
 
         catalog_entry = {
-            "stream": schema_name,
-            "tap_stream_id": schema_name,
+            "stream": stream_name,
+            "tap_stream_id": stream_name,
             "schema": schema,
             "key_properties": _get_key_properties_from_meta(schema_meta),
             "replication_method": _get_replication_method_from_meta(schema_meta),
