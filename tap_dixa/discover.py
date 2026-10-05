@@ -5,7 +5,7 @@ import singer
 from singer import metadata
 from singer.catalog import Catalog
 from tap_dixa.streams import STREAMS
-from tap_dixa.exceptions import DixaClient401Error
+from tap_dixa.exceptions import DixaClient401Error, DixaClient403Error
 from tap_dixa.helpers import (
     _get_key_properties_from_meta,
     _get_replication_key_from_meta,
@@ -59,7 +59,15 @@ def _get_probe_params(stream_class):
 
 
 def check_stream_access(client, stream_class) -> bool:
-    """Return True if accessible, False on 401. Non-401 errors are re-raised."""
+    """Return True if accessible.
+
+    - 401/403 from the probe means the credentials are unauthorized/forbidden
+      for this specific stream, so it is excluded from the catalog (False).
+    - Any other exception (including other DixaClientError subclasses, e.g.
+      400 invalid query parameters, 422 exceeded max csids, and
+      non-DixaClientError exceptions such as connection failures) is not a
+      documented part of this contract and is re-raised unchanged.
+    """
     params = _get_probe_params(stream_class)
     try:
         client.get(
@@ -68,7 +76,7 @@ def check_stream_access(client, stream_class) -> bool:
             params=params,
         )
         return True
-    except DixaClient401Error as e:
+    except (DixaClient401Error, DixaClient403Error) as e:
         LOGGER.warning(
                 "Unauthorized Stream: %s, excluding from catalog. HTTP-Error-Message:'%s'",
                 stream_class.tap_stream_id,

@@ -2,7 +2,12 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from tap_dixa.exceptions import DixaClient401Error
+from tap_dixa.exceptions import (
+    DixaClient400Error,
+    DixaClient401Error,
+    DixaClient403Error,
+    DixaClient422Error,
+)
 from tap_dixa.discover import (
     _apply_access_checks,
     _get_probe_params,
@@ -40,8 +45,34 @@ class TestCheckStreamAccess(unittest.TestCase):
         result = check_stream_access(client, stream_cls)
         self.assertFalse(result)
 
+    def test_returns_false_when_client_raises_403(self):
+        client = MagicMock()
+        client.get.side_effect = DixaClient403Error("Forbidden")
+        stream_cls = self._make_stream_class("activity_logs", "https://dev.dixa.io", "/v1/conversations/activitylog")
+        result = check_stream_access(client, stream_cls)
+        self.assertFalse(result)
+
+    def test_reraises_on_400_probe_error(self):
+        """A 400 from the synthetic minimal probe is not 401/403, so it is
+        not part of this function's documented contract and propagates."""
+        client = MagicMock()
+        client.get.side_effect = DixaClient400Error("Invalid query parameters")
+        stream_cls = self._make_stream_class("conversations", "https://exports.dixa.io", "/v1/conversation_export")
+        with self.assertRaises(DixaClient400Error):
+            check_stream_access(client, stream_cls)
+
+    def test_reraises_on_422_probe_error(self):
+        """A 422 from the synthetic minimal probe is not 401/403, so it is
+        not part of this function's documented contract and propagates."""
+        client = MagicMock()
+        client.get.side_effect = DixaClient422Error("Exceeded max allowed 10 csids per request")
+        stream_cls = self._make_stream_class("conversations", "https://exports.dixa.io", "/v1/conversation_export")
+        with self.assertRaises(DixaClient422Error):
+            check_stream_access(client, stream_cls)
+
     def test_reraises_non_auth_error(self):
-        """Non-401 errors are re-raised — only DixaClient401Error is caught."""
+        """Non-DixaClientError exceptions (e.g. connection failures) are
+        re-raised rather than being treated as access-related."""
         client = MagicMock()
         client.get.side_effect = RuntimeError("422 Unprocessable Entity")
         stream_cls = self._make_stream_class("conversations", "https://exports.dixa.io", "/v1/conversation_export")

@@ -54,6 +54,18 @@ class HTTPErrorCodeHandling(TestCase):
                 self.assertEqual(str(_), "Invalid or missing credentials")
                 raise _
 
+    @mock.patch("requests.Session.request", side_effect=lambda *_, **__: Mockresponse("", 403))
+    def test_403_error_custom_message(self, *args):
+        """
+        Unit test to check proper error message for 403 status code.
+        """
+        with self.assertRaises(exceptions.DixaClient403Error):
+            try:
+                self.client_obj.get("https://test.com", "/test")
+            except exceptions.DixaClientError as _:
+                self.assertEqual(str(_), "Insufficient permissions for this resource")
+                raise _
+
     @mock.patch("time.sleep")
     @mock.patch("requests.Session.request", side_effect=lambda *_, **__: Mockresponse("", 408))
     def test_408_error_custom_message(self, *args):

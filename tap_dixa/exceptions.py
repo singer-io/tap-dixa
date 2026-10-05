@@ -23,6 +23,9 @@ class DixaClient400Error(DixaClientError):
 class DixaClient401Error(DixaClientError):
     pass
 
+class DixaClient403Error(DixaClientError):
+    pass
+
 class DixaClient408Error(DixaClientError):
     pass
 
@@ -39,6 +42,7 @@ class DixaClient5xxError(DixaClientError):
 ERROR_CODE_EXCEPTION_MAPPING = {
     400: {"raise_exception": DixaClient400Error, "message": "Invalid query parameters"},
     401: {"raise_exception": DixaClient401Error, "message": "Invalid or missing credentials"},
+    403: {"raise_exception": DixaClient403Error, "message": "Insufficient permissions for this resource"},
     408: {"raise_exception": DixaClient408Error, "message": "Request Timeout"},
     422: {"raise_exception": DixaClient422Error, "message": "Exceeded max allowed 10 csids per request"},
     429: {"raise_exception": DixaClient429Error, "message": "API limit has been reached"},
