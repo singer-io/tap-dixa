@@ -192,21 +192,30 @@ class TestApplyAccessChecks(unittest.TestCase):
         with self.assertRaises(DixaClient401Error):
             _apply_access_checks(MagicMock(), schemas, metadata_map)
 
-    @patch("tap_dixa.discover.check_stream_access", return_value=True)
-    def test_apply_access_checks_skips_activity_logs_when_client_already_validated(self, mock_check_access):
+    def test_activity_logs_401_only_excludes_activity_logs_stream(self):
+        """Regression test: credentials that are valid for conversations/messages
+        but return 401 specifically on the activity_logs endpoint must only
+        exclude activity_logs — not the whole catalog. There is no longer a
+        shared bootstrap probe tying all streams to the activity_logs endpoint.
+        """
         schemas = {name: {} for name in STREAMS}
         metadata_map = {name: [] for name in STREAMS}
+
         client = MagicMock()
-        client.__dict__["_validated_probe"] = (
-            STREAMS["activity_logs"].base_url,
-            STREAMS["activity_logs"].endpoint,
-        )
+
+        def fake_get(base_url, endpoint, params=None):
+            if endpoint == STREAMS["activity_logs"].endpoint:
+                raise DixaClient401Error("Invalid or missing credentials")
+            return {}
+
+        client.get.side_effect = fake_get
 
         _apply_access_checks(client, schemas, metadata_map)
 
-        checked_streams = [call.args[1].tap_stream_id for call in mock_check_access.call_args_list]
-        self.assertNotIn("activity_logs", checked_streams)
-        self.assertEqual(len(checked_streams), len(STREAMS) - 1)
+        self.assertNotIn("activity_logs", schemas)
+        self.assertNotIn("activity_logs", metadata_map)
+        self.assertIn("conversations", schemas)
+        self.assertIn("messages", schemas)
 
 
 if __name__ == "__main__":

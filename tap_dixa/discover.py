@@ -77,23 +77,18 @@ def check_stream_access(client, stream_class) -> bool:
         return False
 
 
-def _is_redundant_probe(client, stream_class) -> bool:
-    """Return True when stream probe duplicates a successful bootstrap access probe."""
-    validated_probe = None
-    if hasattr(client, "__dict__"):
-        validated_probe = client.__dict__.get("_validated_probe")
-    if not validated_probe:
-        return False
-    return validated_probe == (stream_class.base_url, stream_class.endpoint)
-
-
 def _apply_access_checks(client, schemas: dict, schemas_metadata: dict) -> None:
-    """Remove inaccessible streams from discovery results in place."""
+    """Remove inaccessible streams from discovery results in place.
+
+    Each stream (including activity_logs) is checked independently via its
+    own endpoint. There is no bootstrap/global credential probe anymore, so
+    a credential that can read some streams but not others (e.g. 401 on
+    activity_logs but fine on conversations/messages) only excludes the
+    specific inaccessible stream(s) rather than failing the whole run.
+    """
     inaccessible_streams = []
     for stream_name, stream_class in STREAMS.items():
         if stream_name not in schemas:
-            continue
-        if _is_redundant_probe(client, stream_class):
             continue
         if not check_stream_access(client, stream_class):
             inaccessible_streams.append(stream_name)
