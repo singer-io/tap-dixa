@@ -7,6 +7,7 @@ from tap_dixa.exceptions import (
     DixaClient401Error,
     DixaClient403Error,
     DixaClient422Error,
+    DixaNoAccessibleStreamsError,
 )
 from tap_dixa.discover import (
     _apply_access_checks,
@@ -194,7 +195,7 @@ class TestDiscover(unittest.TestCase):
         )
         mock_check_access.return_value = False
 
-        with self.assertRaises(DixaClient401Error) as ctx:
+        with self.assertRaises(DixaNoAccessibleStreamsError) as ctx:
             discover(self._client())
         self.assertIn("do not have 'read' access to any", str(ctx.exception))
 
@@ -220,8 +221,25 @@ class TestApplyAccessChecks(unittest.TestCase):
         schemas = {name: {} for name in STREAMS}
         metadata_map = {name: [] for name in STREAMS}
 
-        with self.assertRaises(DixaClient401Error):
+        with self.assertRaises(DixaNoAccessibleStreamsError):
             _apply_access_checks(MagicMock(), schemas, metadata_map)
+
+    def test_apply_access_checks_raises_dedicated_error_when_all_streams_403(self):
+        """Regression test: when every stream's probe returns 403 Forbidden
+        (mocked at the client boundary, not via check_stream_access), the
+        aggregate failure must raise a dedicated no-accessible-streams error
+        rather than misclassifying insufficient permissions (403) as invalid
+        credentials (DixaClient401Error)."""
+        schemas = {name: {} for name in STREAMS}
+        metadata_map = {name: [] for name in STREAMS}
+
+        client = MagicMock()
+        client.get.side_effect = DixaClient403Error("Insufficient permissions for this resource")
+
+        with self.assertRaises(DixaNoAccessibleStreamsError):
+            _apply_access_checks(client, schemas, metadata_map)
+        self.assertEqual(schemas, {})
+        self.assertEqual(metadata_map, {})
 
     def test_activity_logs_401_only_excludes_activity_logs_stream(self):
         """Regression test: credentials that are valid for conversations/messages

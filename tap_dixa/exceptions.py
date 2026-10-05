@@ -39,6 +39,18 @@ class DixaClient422Error(DixaClientError):
 class DixaClient5xxError(DixaClientError):
     pass
 
+
+class DixaNoAccessibleStreamsError(DixaClientError):
+    """Raised when every configured stream is excluded during discovery's
+    per-stream access checks (each individually failing with 401 and/or 403).
+
+    This is intentionally distinct from DixaClient401Error/DixaClient403Error:
+    the aggregate failure may result from a mix of unauthorized (401) and
+    forbidden (403) streams, so raising either status-specific exception
+    alone would misclassify the other case.
+    """
+    pass
+
 ERROR_CODE_EXCEPTION_MAPPING = {
     400: {"raise_exception": DixaClient400Error, "message": "Invalid query parameters"},
     401: {"raise_exception": DixaClient401Error, "message": "Invalid or missing credentials"},

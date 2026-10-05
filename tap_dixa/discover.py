@@ -5,7 +5,7 @@ import singer
 from singer import metadata
 from singer.catalog import Catalog
 from tap_dixa.streams import STREAMS
-from tap_dixa.exceptions import DixaClient401Error, DixaClient403Error
+from tap_dixa.exceptions import DixaClient401Error, DixaClient403Error, DixaNoAccessibleStreamsError
 from tap_dixa.helpers import (
     _get_key_properties_from_meta,
     _get_replication_key_from_meta,
@@ -108,7 +108,7 @@ def _apply_access_checks(client, schemas: dict, schemas_metadata: dict) -> None:
     accessible_streams = [s for s in STREAMS if s in schemas]
 
     if not accessible_streams:
-        raise DixaClient401Error(
+        raise DixaNoAccessibleStreamsError(
             "Error: The credentials do not have 'read' access to any supported streams."
         )
     if inaccessible_streams:
