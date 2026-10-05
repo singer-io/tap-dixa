@@ -17,7 +17,9 @@ def unix_ms_to_date(timestamp_ms: int) -> str:
     :param ms: unix timestamp in milliseconds
     :return: ISO 8601 date string
     """
-    return datetime.datetime.utcfromtimestamp(timestamp_ms / 1000).replace(microsecond=0).isoformat()
+    return datetime.datetime.fromtimestamp(
+        timestamp_ms / 1000, tz=datetime.timezone.utc
+    ).replace(microsecond=0, tzinfo=None).isoformat()
 
 
 def unix_ms_to_date_utc(timestamp_ms: int) -> datetime.datetime:
