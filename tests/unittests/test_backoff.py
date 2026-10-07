@@ -2,7 +2,6 @@ from unittest.mock import patch
 import unittest
 import requests
 from requests.exceptions import ChunkedEncodingError
-from datetime import datetime
 
 from tap_dixa.client import Client, DixaClient429Error
 from tap_dixa.exceptions import DixaClient5xxError
@@ -46,20 +45,20 @@ class Test_backoff(unittest.TestCase):
             """
         self.assertEqual(mocked_send.call_count, 3)
 
+    @patch("time.sleep")
     @patch("requests.Session.request", side_effect=mocked_failed_429_request)
-    def test_request_timeout_and_backoff(self, mock_send):
+    def test_request_timeout_and_backoff(self, mock_send, mocked_sleep):
         """
         Check whether the request backoffs properly for get call for more than a minute for Server429Error.
         """
         mock_send.side_effect = DixaClient429Error
         client = Client(api_token="test")
-        before_time = datetime.now()
         with self.assertRaises(DixaClient429Error):
             _ = client.get("https://test.com", "/test")
-        after_time = datetime.now()
-        # verify that the tap backoff for more than 60 seconds
-        time_difference = (after_time - before_time).total_seconds()
-        self.assertTrue(60 <= time_difference <= 121)
+        # Verify the tap backs off for 60 seconds between each of the 2 retries,
+        # without actually sleeping in the test (time.sleep is mocked).
+        self.assertEqual(mocked_sleep.call_count, 2)
+        mocked_sleep.assert_called_with(60)
 
     @patch("time.sleep")
     @patch("requests.Session.request", side_effect= lambda *args, **kwargs : Mockresponse('', 500, headers={}, raise_error=True))
