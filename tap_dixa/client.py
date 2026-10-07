@@ -4,9 +4,9 @@ import backoff
 import requests
 from requests.exceptions import ChunkedEncodingError
 
-from tap_dixa.exceptions import (DixaClient429Error, DixaClient408Error, 
-                                DixaClient5xxError, raise_for_error,
-                                retry_after_wait_gen)
+from tap_dixa.exceptions import (DixaClient429Error, DixaClient408Error,
+                                DixaClient5xxError,
+                                raise_for_error, retry_after_wait_gen)
 from tap_dixa.helpers import DixaURL
 
 class Client:

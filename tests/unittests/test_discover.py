@@ -1,0 +1,271 @@
+"""Unit tests for tap_dixa discover module and access-check helpers."""
+import unittest
+from unittest.mock import MagicMock, patch
+
+from tap_dixa.exceptions import (
+    DixaClient400Error,
+    DixaClient401Error,
+    DixaClient403Error,
+    DixaClient422Error,
+    DixaNoAccessibleStreamsError,
+)
+from tap_dixa.discover import (
+    _apply_access_checks,
+    _get_probe_params,
+    check_stream_access,
+    discover,
+)
+from tap_dixa.streams import STREAMS
+
+
+# ---------------------------------------------------------------------------
+# check_stream_access
+# ---------------------------------------------------------------------------
+
+class TestCheckStreamAccess(unittest.TestCase):
+    """Tests for the merged check_stream_access function in tap_dixa.discover."""
+
+    def _make_stream_class(self, tap_stream_id, base_url="https://dev.dixa.io", endpoint="/v1/test"):
+        cls = MagicMock()
+        cls.tap_stream_id = tap_stream_id
+        cls.base_url = base_url
+        cls.endpoint = endpoint
+        return cls
+
+    def test_returns_true_when_client_succeeds(self):
+        client = MagicMock()
+        stream_cls = self._make_stream_class("activity_logs", "https://dev.dixa.io", "/v1/conversations/activitylog")
+        result = check_stream_access(client, stream_cls)
+        self.assertTrue(result)
+        client.get.assert_called_once()
+
+    def test_returns_false_when_client_raises_401(self):
+        client = MagicMock()
+        client.get.side_effect = DixaClient401Error("Unauthorized")
+        stream_cls = self._make_stream_class("activity_logs", "https://dev.dixa.io", "/v1/conversations/activitylog")
+        result = check_stream_access(client, stream_cls)
+        self.assertFalse(result)
+
+    def test_returns_false_when_client_raises_403(self):
+        client = MagicMock()
+        client.get.side_effect = DixaClient403Error("Forbidden")
+        stream_cls = self._make_stream_class("activity_logs", "https://dev.dixa.io", "/v1/conversations/activitylog")
+        result = check_stream_access(client, stream_cls)
+        self.assertFalse(result)
+
+    def test_reraises_on_400_probe_error(self):
+        """A 400 from the synthetic minimal probe is not 401/403, so it is
+        not part of this function's documented contract and propagates."""
+        client = MagicMock()
+        client.get.side_effect = DixaClient400Error("Invalid query parameters")
+        stream_cls = self._make_stream_class("conversations", "https://exports.dixa.io", "/v1/conversation_export")
+        with self.assertRaises(DixaClient400Error):
+            check_stream_access(client, stream_cls)
+
+    def test_reraises_on_422_probe_error(self):
+        """A 422 from the synthetic minimal probe is not 401/403, so it is
+        not part of this function's documented contract and propagates."""
+        client = MagicMock()
+        client.get.side_effect = DixaClient422Error("Exceeded max allowed 10 csids per request")
+        stream_cls = self._make_stream_class("conversations", "https://exports.dixa.io", "/v1/conversation_export")
+        with self.assertRaises(DixaClient422Error):
+            check_stream_access(client, stream_cls)
+
+    def test_reraises_non_auth_error(self):
+        """Non-DixaClientError exceptions (e.g. connection failures) are
+        re-raised rather than being treated as access-related."""
+        client = MagicMock()
+        client.get.side_effect = RuntimeError("422 Unprocessable Entity")
+        stream_cls = self._make_stream_class("conversations", "https://exports.dixa.io", "/v1/conversation_export")
+        with self.assertRaises(RuntimeError):
+            check_stream_access(client, stream_cls)
+
+
+# ---------------------------------------------------------------------------
+# _get_probe_params
+# ---------------------------------------------------------------------------
+
+class TestGetProbeParams(unittest.TestCase):
+    """Tests for _get_probe_params to ensure each stream uses the correct param names."""
+
+    def _make_stream_class(self, tap_stream_id):
+        cls = MagicMock()
+        cls.tap_stream_id = tap_stream_id
+        return cls
+
+    def test_activity_logs_uses_from_to_datetime(self):
+        """activity_logs must use fromDatetime/toDatetime (RFC-3339 strings)."""
+        params = _get_probe_params(self._make_stream_class("activity_logs"))
+        self.assertIn("fromDatetime", params)
+        self.assertIn("toDatetime", params)
+        self.assertNotIn("created_after", params)
+        self.assertNotIn("created_before", params)
+        # Values should be strings (RFC-3339)
+        self.assertIsInstance(params["fromDatetime"], str)
+        self.assertIsInstance(params["toDatetime"], str)
+
+    def test_conversations_uses_updated_after_before(self):
+        """conversations must use updated_after/updated_before (unix-ms integers)."""
+        params = _get_probe_params(self._make_stream_class("conversations"))
+        self.assertIn("updated_after", params)
+        self.assertIn("updated_before", params)
+        self.assertNotIn("created_after", params)
+        self.assertNotIn("created_before", params)
+        # Values should be integers (unix-ms)
+        self.assertIsInstance(params["updated_after"], int)
+        self.assertIsInstance(params["updated_before"], int)
+
+    def test_messages_uses_created_after_before(self):
+        """messages must use created_after/created_before (unix-ms integers)."""
+        params = _get_probe_params(self._make_stream_class("messages"))
+        self.assertIn("created_after", params)
+        self.assertIn("created_before", params)
+        self.assertNotIn("fromDatetime", params)
+        self.assertNotIn("toDatetime", params)
+        # Values should be integers (unix-ms)
+        self.assertIsInstance(params["created_after"], int)
+        self.assertIsInstance(params["created_before"], int)
+
+
+# ---------------------------------------------------------------------------
+# discover()
+# ---------------------------------------------------------------------------
+
+class TestDiscover(unittest.TestCase):
+    """Tests for the discover() function in tap_dixa.discover."""
+
+    def _client(self):
+        return MagicMock()
+
+    @patch("tap_dixa.discover.get_schemas")
+    def test_all_accessible_streams_included_in_catalog(
+        self, mock_get_schemas
+    ):
+        """All streams pass access check → all appear in the catalog."""
+        mock_get_schemas.return_value = (
+            {name: {"type": "object", "properties": {}} for name in STREAMS},
+            {name: [{"metadata": {"table-key-properties": ["id"],
+                                  "forced-replication-method": "INCREMENTAL",
+                                  "valid-replication-keys": ["created_at"]},
+                     "breadcrumb": []}] for name in STREAMS},
+        )
+        with patch("tap_dixa.discover._apply_access_checks") as mock_apply:
+            catalog = discover(self._client())
+
+        mock_apply.assert_called_once()
+        returned_stream_names = {s.tap_stream_id for s in catalog.streams}
+        self.assertEqual(returned_stream_names, set(STREAMS.keys()))
+
+    @patch("tap_dixa.discover.get_schemas")
+    @patch("tap_dixa.discover.check_stream_access")
+    def test_inaccessible_stream_excluded_from_catalog(
+        self, mock_check_access, mock_get_schemas
+    ):
+        """Streams that fail the access check are excluded from the catalog."""
+        all_streams = list(STREAMS.keys())
+        blocked_stream = all_streams[0]
+        accessible_streams = all_streams[1:]  # at least one accessible to avoid empty-catalog exception
+
+        mock_get_schemas.return_value = (
+            {name: {"type": "object", "properties": {}} for name in all_streams},
+            {name: [{"metadata": {"table-key-properties": ["id"],
+                                  "forced-replication-method": "INCREMENTAL",
+                                  "valid-replication-keys": ["created_at"]},
+                     "breadcrumb": []}] for name in all_streams},
+        )
+        mock_check_access.side_effect = lambda client, cls: cls.tap_stream_id != blocked_stream
+
+        catalog = discover(self._client())
+        returned_stream_names = {s.tap_stream_id for s in catalog.streams}
+        self.assertNotIn(blocked_stream, returned_stream_names)
+        self.assertEqual(returned_stream_names, set(accessible_streams))
+
+    @patch("tap_dixa.discover.get_schemas")
+    @patch("tap_dixa.discover.check_stream_access")
+    def test_all_inaccessible_raises_exception(
+        self, mock_check_access, mock_get_schemas
+    ):
+        """When no streams are accessible, discover() raises an exception."""
+        mock_get_schemas.return_value = (
+            {name: {"type": "object", "properties": {}} for name in STREAMS},
+            {name: [{"metadata": {"table-key-properties": ["id"],
+                                  "forced-replication-method": "INCREMENTAL",
+                                  "valid-replication-keys": ["created_at"]},
+                     "breadcrumb": []}] for name in STREAMS},
+        )
+        mock_check_access.return_value = False
+
+        with self.assertRaises(DixaNoAccessibleStreamsError) as ctx:
+            discover(self._client())
+        self.assertIn("do not have 'read' access to any", str(ctx.exception))
+
+
+class TestApplyAccessChecks(unittest.TestCase):
+    """Tests for _apply_access_checks()."""
+
+    @patch("tap_dixa.discover.check_stream_access")
+    def test_apply_access_checks_removes_inaccessible_streams(self, mock_check_access):
+        blocked_stream = next(iter(STREAMS))
+        mock_check_access.side_effect = lambda client, cls: cls.tap_stream_id != blocked_stream
+        schemas = {name: {} for name in STREAMS}
+        metadata_map = {name: [] for name in STREAMS}
+
+        _apply_access_checks(MagicMock(), schemas, metadata_map)
+
+        self.assertNotIn(blocked_stream, schemas)
+        self.assertNotIn(blocked_stream, metadata_map)
+
+    @patch("tap_dixa.discover.check_stream_access")
+    def test_apply_access_checks_raises_when_all_streams_blocked(self, mock_check_access):
+        mock_check_access.return_value = False
+        schemas = {name: {} for name in STREAMS}
+        metadata_map = {name: [] for name in STREAMS}
+
+        with self.assertRaises(DixaNoAccessibleStreamsError):
+            _apply_access_checks(MagicMock(), schemas, metadata_map)
+
+    def test_apply_access_checks_raises_dedicated_error_when_all_streams_403(self):
+        """Regression test: when every stream's probe returns 403 Forbidden
+        (mocked at the client boundary, not via check_stream_access), the
+        aggregate failure must raise a dedicated no-accessible-streams error
+        rather than misclassifying insufficient permissions (403) as invalid
+        credentials (DixaClient401Error)."""
+        schemas = {name: {} for name in STREAMS}
+        metadata_map = {name: [] for name in STREAMS}
+
+        client = MagicMock()
+        client.get.side_effect = DixaClient403Error("Insufficient permissions for this resource")
+
+        with self.assertRaises(DixaNoAccessibleStreamsError):
+            _apply_access_checks(client, schemas, metadata_map)
+        self.assertEqual(schemas, {})
+        self.assertEqual(metadata_map, {})
+
+    def test_activity_logs_401_only_excludes_activity_logs_stream(self):
+        """Regression test: credentials that are valid for conversations/messages
+        but return 401 specifically on the activity_logs endpoint must only
+        exclude activity_logs — not the whole catalog. There is no longer a
+        shared bootstrap probe tying all streams to the activity_logs endpoint.
+        """
+        schemas = {name: {} for name in STREAMS}
+        metadata_map = {name: [] for name in STREAMS}
+
+        client = MagicMock()
+
+        def fake_get(base_url, endpoint, params=None):
+            if endpoint == STREAMS["activity_logs"].endpoint:
+                raise DixaClient401Error("Invalid or missing credentials")
+            return {}
+
+        client.get.side_effect = fake_get
+
+        _apply_access_checks(client, schemas, metadata_map)
+
+        self.assertNotIn("activity_logs", schemas)
+        self.assertNotIn("activity_logs", metadata_map)
+        self.assertIn("conversations", schemas)
+        self.assertIn("messages", schemas)
+
+
+if __name__ == "__main__":
+    unittest.main()

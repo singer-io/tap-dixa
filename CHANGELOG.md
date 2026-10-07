@@ -1,9 +1,12 @@
 # Changelog
 
-# 1.0.10
+## 1.1.0
+  * Added per-stream access checks during discovery; streams returning 401 Unauthorized are excluded from the catalog [#33](https://github.com/singer-io/tap-dixa/pull/33)
+ 
+## 1.0.10
   * Bump idna and urllib3 for security updates [#35](https://github.com/singer-io/tap-dixa/pull/35)
 
-# 1.0.9
+## 1.0.9
   * Bump requests to 2.33.0 for security updates [#34](https://github.com/singer-io/tap-dixa/pull/34)
 
 ## 1.0.8
