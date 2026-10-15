@@ -61,8 +61,15 @@ def _get_probe_params(stream_class):
 def check_stream_access(client, stream_class) -> bool:
     """Return True if accessible.
 
-    - 401/403 from the probe means the credentials are unauthorized/forbidden
-      for this specific stream, so it is excluded from the catalog (False).
+    - 403 from the probe means the credentials are forbidden from this
+      specific stream (e.g. insufficient scope/permission), so it is
+      excluded from the catalog (False) rather than failing the whole run.
+    - 401 from the probe means the credentials themselves are invalid or
+      missing entirely (account-wide auth failure), not a per-stream
+      permission issue. It must NOT be swallowed/excluded here; it is
+      re-raised so discovery aborts immediately instead of silently
+      probing the remaining streams with credentials already known to be
+      invalid.
     - Any other exception (including other DixaClientError subclasses, e.g.
       400 invalid query parameters, 422 exceeded max csids, and
       non-DixaClientError exceptions such as connection failures) is not a
@@ -76,7 +83,7 @@ def check_stream_access(client, stream_class) -> bool:
             params=params,
         )
         return True
-    except (DixaClient401Error, DixaClient403Error) as e:
+    except DixaClient403Error as e:
         LOGGER.warning(
                 "Unauthorized Stream: %s, excluding from catalog. HTTP-Error-Message:'%s'",
                 stream_class.tap_stream_id,
@@ -90,9 +97,15 @@ def _apply_access_checks(client, schemas: dict, schemas_metadata: dict) -> None:
 
     Each stream (including activity_logs) is checked independently via its
     own endpoint. There is no bootstrap/global credential probe anymore, so
-    a credential that can read some streams but not others (e.g. 401 on
-    activity_logs but fine on conversations/messages) only excludes the
-    specific inaccessible stream(s) rather than failing the whole run.
+    a 403 (insufficient permission) on one stream only excludes that
+    specific stream rather than failing the whole run.
+
+    A 401 (invalid/missing credentials), however, is an account-wide
+    authentication failure rather than a per-stream permission issue.
+    check_stream_access() does not catch it, so it propagates out of this
+    function immediately on the first stream probed, aborting discovery
+    without probing the remaining streams with credentials already known
+    to be invalid.
     """
     inaccessible_streams = []
     for stream_name, stream_class in STREAMS.items():

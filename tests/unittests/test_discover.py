@@ -39,12 +39,15 @@ class TestCheckStreamAccess(unittest.TestCase):
         self.assertTrue(result)
         client.get.assert_called_once()
 
-    def test_returns_false_when_client_raises_401(self):
+    def test_reraises_on_401_probe_error(self):
+        """A 401 means the credentials themselves are invalid/missing
+        (account-wide auth failure), not a per-stream permission issue.
+        It must propagate rather than being excluded like a 403."""
         client = MagicMock()
         client.get.side_effect = DixaClient401Error("Unauthorized")
         stream_cls = self._make_stream_class("activity_logs", "https://dev.dixa.io", "/v1/conversations/activitylog")
-        result = check_stream_access(client, stream_cls)
-        self.assertFalse(result)
+        with self.assertRaises(DixaClient401Error):
+            check_stream_access(client, stream_cls)
 
     def test_returns_false_when_client_raises_403(self):
         client = MagicMock()
@@ -241,11 +244,11 @@ class TestApplyAccessChecks(unittest.TestCase):
         self.assertEqual(schemas, {})
         self.assertEqual(metadata_map, {})
 
-    def test_activity_logs_401_only_excludes_activity_logs_stream(self):
-        """Regression test: credentials that are valid for conversations/messages
-        but return 401 specifically on the activity_logs endpoint must only
-        exclude activity_logs — not the whole catalog. There is no longer a
-        shared bootstrap probe tying all streams to the activity_logs endpoint.
+    def test_activity_logs_401_aborts_discovery_immediately(self):
+        """Regression test: a 401 (invalid/missing credentials) on any
+        single stream's probe is an account-wide auth failure. It must
+        abort discovery immediately rather than merely excluding that one
+        stream and continuing to probe the rest.
         """
         schemas = {name: {} for name in STREAMS}
         metadata_map = {name: [] for name in STREAMS}
@@ -259,12 +262,8 @@ class TestApplyAccessChecks(unittest.TestCase):
 
         client.get.side_effect = fake_get
 
-        _apply_access_checks(client, schemas, metadata_map)
-
-        self.assertNotIn("activity_logs", schemas)
-        self.assertNotIn("activity_logs", metadata_map)
-        self.assertIn("conversations", schemas)
-        self.assertIn("messages", schemas)
+        with self.assertRaises(DixaClient401Error):
+            _apply_access_checks(client, schemas, metadata_map)
 
 
 if __name__ == "__main__":
