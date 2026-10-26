@@ -1,5 +1,8 @@
 # Changelog
 
+# 1.0.11
+  * Bump certifi, requests, and urllib3 for security updates [#38](https://github.com/singer-io/tap-dixa/pull/38)
+
 # 1.0.10
   * Bump idna and urllib3 for security updates [#35](https://github.com/singer-io/tap-dixa/pull/35)
 
