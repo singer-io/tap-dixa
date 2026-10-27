@@ -58,9 +58,9 @@ class DixaBookMarkTest(DixaBaseTest):
         LOGGER.info("Current Bookmark: {}".format(first_sync_bookmarks))
         new_states = menagerie.get_state(conn_id)
         new_states = {'currently_syncing': None,
-                      'bookmarks': {'conversations': {list(expected_replication_keys['conversations'])[0]: 1655856000000},
-                                    'messages': {list(expected_replication_keys['messages'])[0]: 1655856000000},
-                                    'activity_logs': {list(expected_replication_keys['activity_logs'])[0]: "2022-06-22T00:00:00Z"}}}
+                      'bookmarks': {'conversations': {list(expected_replication_keys['conversations'])[0]: 1779148800000},
+                                    'messages': {list(expected_replication_keys['messages'])[0]: 1779148800000},
+                                    'activity_logs': {list(expected_replication_keys['activity_logs'])[0]: "2026-05-20T00:00:00Z"}}}
 
         menagerie.set_state(conn_id, new_states)
         LOGGER.info("New Bookmark: {}".format(menagerie.get_state(conn_id)))
